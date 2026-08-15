@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D 5e Character Forge</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dndRed: '#E22822',
+                        dndDark: '#1a1a1a',
+                        dndPaper: '#f4e4bc'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for in-browser JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #121212;
+            color: #e5e7eb;
+            background-image: radial-gradient(circle at center, #2a2a2a 0%, #121212 100%);
+            min-height: 100vh;
+        }
+        .parchment {
+            background-color: #f4e4bc;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E");
+            color: #2d3748;
+        }
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #E22822;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const API_BASE = "https://www.dnd5eapi.co/api";
+
+        // Comprehensive subclass mappings to ensure all subclasses are available (beyond SRD single-subclass limit)
+        const COMPREHENSIVE_SUBCLASSES = {
+            barbarian: [
+                { index: 'path-of-the-berserker', name: 'Path of the Berserker' },
+                { index: 'path-of-the-totem-warrior', name: 'Path of the Totem Warrior' },
+                { index: 'path-of-the-ancestral-guardian', name: 'Path of the Ancestral Guardian' },
+                { index: 'path-of-the-zealot', name: 'Path of the Zealot' },
+                { index: 'path-of-the-beast', name: 'Path of the Beast' },
+                { index: 'path-of-wild-magic', name: 'Path of Wild Magic' }
+            ],
+            bard: [
+                { index: 'college-of-lore', name: 'College of Lore' },
+                { index: 'college-of-valor', name: 'College of Valor' },
+                { index: 'college-of-creation', name: 'College of Creation' },
+                { index: 'college-of-eloquence', name: 'College of Eloquence' },
+                { index: 'college-of-glamour', name: 'College of Glamour' },
+                { index: 'college-of-swords', name: 'College of Swords' },
+                { index: 'college-of-whispers', name: 'College of Whispers' }
+            ],
+            cleric: [
+                { index: 'knowledge-domain', name: 'Knowledge Domain' },
+                { index: 'life-domain', name: 'Life Domain' },
+                { index: 'light-domain', name: 'Light Domain' },
+                { index: 'nature-domain', name: 'Nature Domain' },
+                { index: 'tempest-domain', name: 'Tempest Domain' },
+                { index: 'trickery-domain', name: 'Trickery Domain' },
+                { index: 'war-domain', name: 'War Domain' },
+                { index: 'forge-domain', name: 'Forge Domain' },
+                { index: 'grave-domain', name: 'Grave Domain' },
+                { index: 'order-domain', name: 'Order Domain' },
+                { index: 'peace-domain', name: 'Peace Domain' },
+                { index: 'twilight-domain', name: 'Twilight Domain' }
+            ],
+            druid: [
+                { index: 'circle-of-the-land', name: 'Circle of the Land' },
+                { index: 'circle-of-the-moon', name: 'Circle of the Moon' },
+                { index: 'circle-of-dreams', name: 'Circle of Dreams' },
+                { index: 'circle-of-spores', name: 'Circle of Spores' },
+                { index: 'circle-of-stars', name: 'Circle of Stars' },
+                { index: 'circle-of-wildfire', name: 'Circle of Wildfire' }
+            ],
+            fighter: [
+                { index: 'champion', name: 'Champion' },
+                { index: 'battle-master', name: 'Battle Master' },
+                { index: 'eldritch-knight', name: 'Eldritch Knight' },
+                { index: 'psi-warrior', name: 'Psi Warrior' },
+                { index: 'rune-knight', name: 'Rune Knight' },
+                { index: 'samurai', name: 'Samurai' },
+                { index: 'cavalier', name: 'Cavalier' }
+            ],
+            monk: [
+                { index: 'way-of-the-open-hand', name: 'Way of the Open Hand' },
+                { index: 'way-of-shadow', name: 'Way of Shadow' },
+                { index: 'way-of-the-four-elements', name: 'Way of the Four Elements' },
+                { index: 'way-of-mercy', name: 'Way of Mercy' },
+                { index: 'way-of-the-astral-self', name: 'Way of the Astral Self' },
+                { index: 'way-of-the-drunken-master', name: 'Way of the Drunken Master' },
+                { index: 'way-of-the-kensei', name: 'Way of the Kensei' }
+            ],
+            paladin: [
+                { index: 'oath-of-devotion', name: 'Oath of Devotion' },
+                { index: 'oath-of-the-ancients', name: 'Oath of the Ancients' },
+                { index: 'oath-of-vengeance', name: 'Oath of Vengeance' },
+                { index: 'oath-of-conquest', name: 'Oath of Conquest' },
+                { index: 'oath-of-redemption', name: 'Oath of Redemption' },
+                { index: 'oath-of-glory', name: 'Oath of Glory' },
+                { index: 'oath-of-the-watchers', name: 'Oath of the Watchers' },
+                { index: 'oathbreaker', name: 'Oathbreaker' }
+            ],
+            ranger: [
+                { index: 'hunter', name: 'Hunter' },
+                { index: 'beast-master', name: 'Beast Master' },
+                { index: 'drakewarden', name: 'Drakewarden' },
+                { index: 'gloom-stalker', name: 'Gloom Stalker' },
+                { index: 'horizon-walker', name: 'Horizon Walker' },
+                { index: 'monster-slayer', name: 'Monster Slayer' },
+                { index: 'swarmkeeper', name: 'Swarmkeeper' }
+            ],
+            rogue: [
+                { index: 'thief', name: 'Thief' },
+                { index: 'assassin', name: 'Assassin' },
+                { index: 'arcane-trickster', name: 'Arcane Trickster' },
+                { index: 'phantom', name: 'Phantom' },
+                { index: 'soulknife', name: 'Soulknife' },
+                { index: 'scout', name: 'Scout' },
+                { index: 'swashbuckler', name: 'Swashbuckler' },
+                { index: 'mastermind', name: 'Mastermind' }
+            ],
+            sorcerer: [
+                { index: 'draconic-bloodline', name: 'Draconic Bloodline' },
+                { index: 'wild-magic', name: 'Wild Magic Sorcery' },
+                { index: 'clockwork-soul', name: 'Clockwork Soul' },
+                { index: 'aberrant-mind', name: 'Aberrant Mind' },
+                { index: 'divine-soul', name: 'Divine Soul' },
+                { index: 'shadow-magic', name: 'Shadow Magic' },
+                { index: 'storm-sorcery', name: 'Storm Sorcery' }
+            ],
+            warlock: [
+                { index: 'archfey', name: 'The Archfey' },
+                { index: 'fiend', name: 'The Fiend' },
+                { index: 'great-old-one', name: 'The Great Old One' },
+                { index: 'celestial', name: 'The Celestial' },
+                { index: 'fathomless', name: 'The Fathomless' },
+                { index: 'genie', name: 'The Genie' },
+                { index: 'hexblade', name: 'The Hexblade' },
+                { index: 'undead', name: 'The Undead' }
+            ],
+            wizard: [
+                { index: 'school-of-abjuration', name: 'School of Abjuration' },
+                { index: 'school-of-conjuration', name: 'School of Conjuration' },
+                { index: 'school-of-divination', name: 'School of Divination' },
+                { index: 'school-of-enchantment', name: 'School of Enchantment' },
+                { index: 'school-of-evocation', name: 'School of Evocation' },
+                { index: 'school-of-illusion', name: 'School of Illusion' },
+                { index: 'school-of-necro', name: 'School of Necromancy' },
+                { index: 'school-of-transmutation', name: 'School of Transmutation' },
+                { index: 'bladesinging', name: 'Bladesinging' },
+                { index: 'war-magic', name: 'War Magic' },
+                { index: 'chronurgy-magic', name: 'Chronurgy Magic' },
+                { index: 'graviturgy-magic', name: 'Graviturgy Magic' }
+            ],
+            artificer: [
+                { index: 'alchemist', name: 'Alchemist' },
+                { index: 'armorer', name: 'Armorer' },
+                { index: 'artillerist', name: 'Artillerist' },
+                { index: 'battle-smith', name: 'Battle Smith' }
+            ]
+        };
+
+        // Utility: Fetch list from API
+        const fetchAPI = async (endpoint) => {
+            try {
+                const response = await fetch(`${API_BASE}/${endpoint}`);
+                const data = await response.json();
+                return data.results || [];
+            } catch (err) {
+                console.error("Error fetching from D&D API", err);
+                return [];
+            }
+        };
+
+        // Utility: Fetch specific details
+        const fetchDetails = async (url) => {
+            try {
+                const response = await fetch(`https://www.dnd5eapi.co${url}`);
+                return await response.json();
+            } catch (err) {
+                console.error("Error fetching details", err);
+                return null;
+            }
+        };
+
+        const CharacterSheet = ({ character, onEdit }) => {
+            return (
+                <div className="parchment p-8 rounded-lg shadow-2xl max-w-4xl w-full mx-auto font-serif">
+                    <div className="border-b-4 border-red-800 pb-4 mb-6 flex justify-between items-end">
+                        <div>
+                            <h1 className="text-4xl font-bold text-red-900 uppercase tracking-wider">{character.name || "Unnamed Hero"}</h1>
+                            <div className="text-lg text-gray-700 mt-2">
+                                {character.race?.name || "Unknown Race"} {character.subclass ? `(${character.subclass.name}) ` : ''}{character.charClass?.name || "Unknown Class"} - Level {character.level}
+                            </div>
+                        </div>
+                        <button onClick={onEdit} className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition text-sm font-sans">
+                            <i className="fa-solid fa-pen mr-2"></i>Edit Character
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Stats Column */}
+                        <div className="col-span-1 space-y-4">
+                            <div className="bg-white/50 p-4 border-2 border-gray-400 rounded-lg shadow-sm">
+                                <h3 className="text-center font-bold text-gray-800 border-b border-gray-400 pb-1 mb-3 uppercase tracking-widest text-sm">Ability Scores</h3>
+                                <div className="space-y-3">
+                                    {Object.entries(character.stats).map(([stat, val]) => (
+                                        <div key={stat} className="flex justify-between items-center bg-white p-2 rounded border border-gray-300">
+                                            <span className="font-bold text-gray-600 w-12">{stat}</span>
+                                            <span className="text-2xl font-bold text-red-900">{val}</span>
+                                            <span className="text-sm font-bold w-8 text-right text-gray-500">
+                                                {Math.floor((val - 10) / 2) >= 0 ? '+' : ''}{Math.floor((val - 10) / 2)}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            <div className="bg-white/50 p-4 border-2 border-gray-400 rounded-lg shadow-sm flex justify-around text-center">
+                                <div>
+                                    <div className="text-xs font-bold text-gray-600 uppercase">Armor Class</div>
+                                    <div className="text-3xl font-bold text-red-900">{character.armorClass}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs font-bold text-gray-600 uppercase">Max HP</div>
+                                    <div className="text-3xl font-bold text-red-900">{character.maxHp}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Details Column */}
+                        <div className="col-span-1 md:col-span-2 space-y-4">
+                            <div className="bg-white/50 p-4 border-2 border-gray-400 rounded-lg shadow-sm h-full flex flex-col">
+                                <h3 className="font-bold text-gray-800 border-b border-gray-400 pb-1 mb-3 uppercase tracking-widest text-sm">Features, Traits & Abilities</h3>
+                                {character.features && character.features.length > 0 ? (
+                                    <div className="space-y-3 overflow-y-auto max-h-[400px] pr-2">
+                                        {character.features.map((feature, idx) => (
+                                            <div key={idx} className="bg-white p-3 rounded border border-gray-300 text-sm shadow-sm">
+                                                <span className="font-bold text-red-900 block mb-1">{feature.name}</span>
+                                                <div className="text-gray-700 text-xs leading-relaxed space-y-1">
+                                                    {feature.desc ? feature.desc.map((p, i) => <p key={i}>{p}</p>) : <p>No description available.</p>}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-gray-500 italic flex-grow">
+                                        {character.charClass 
+                                            ? "Consulting the API for class abilities..." 
+                                            : "No class features yet. Select a class to gain abilities."}
+                                    </p>
+                                )}
+
+                                <h3 className="font-bold text-gray-800 border-b border-gray-400 pb-1 mb-3 mt-6 uppercase tracking-widest text-sm">Spellbook ({character.spells.length})</h3>
+                                {character.spells.length > 0 ? (
+                                    <ul className="space-y-2">
+                                        {character.spells.map((spell, idx) => (
+                                            <li key={idx} className="bg-white p-2 rounded border border-gray-300 text-sm flex justify-between">
+                                                <span className="font-bold text-red-900">{spell.name}</span>
+                                                <span className="text-gray-500 text-xs">Level {spell.level} • {spell.school?.name}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-sm text-gray-500 italic">No spells learned.</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const SpellSelector = ({ character, setCharacter }) => {
+            const [searchTerm, setSearchTerm] = useState('');
+            const [spellList, setSpellList] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [selectedSpellDetails, setSelectedSpellDetails] = useState(null);
+
+            useEffect(() => {
+                const loadSpells = async () => {
+                    setLoading(true);
+                    const spells = await fetchAPI('spells');
+                    setSpellList(spells);
+                    setLoading(false);
+                };
+                loadSpells();
+            }, []);
+
+            const filteredSpells = spellList.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+            const viewSpell = async (url) => {
+                const details = await fetchDetails(url);
+                setSelectedSpellDetails(details);
+            };
+
+            const addSpell = (spellInfo) => {
+                if (!character.spells.find(s => s.index === spellInfo.index)) {
+                    setCharacter({...character, spells: [...character.spells, spellInfo]});
+                }
+            };
+
+            const removeSpell = (spellIndex) => {
+                setCharacter({...character, spells: character.spells.filter(s => s.index !== spellIndex)});
+            };
+
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-[600px]">
+                    <div className="bg-stone-800 p-4 rounded-lg flex flex-col h-full border border-stone-700">
+                        <h3 className="text-xl font-bold mb-4 text-dndRed"><i className="fa-solid fa-book-journal-whills mr-2"></i>Grimoire Search (API)</h3>
+                        <input 
+                            type="text" 
+                            placeholder="Search thousands of spells..." 
+                            className="w-full p-3 rounded bg-stone-900 text-white border border-stone-600 focus:border-dndRed focus:outline-none mb-4"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        <div className="overflow-y-auto flex-grow pr-2 space-y-2">
+                            {loading ? <div className="flex justify-center"><div className="loader"></div></div> : 
+                                filteredSpells.map(spell => (
+                                    <div key={spell.index} className="flex justify-between items-center bg-stone-700 p-2 rounded hover:bg-stone-600 transition">
+                                        <span className="cursor-pointer font-medium" onClick={() => viewSpell(spell.url)}>{spell.name}</span>
+                                        <button onClick={() => viewSpell(spell.url)} className="text-xs bg-stone-900 px-2 py-1 rounded text-gray-300 hover:text-white">View</button>
+                                    </div>
+                                ))
+                            }
+                        </div>
+                    </div>
+
+                    <div className="bg-stone-800 p-4 rounded-lg flex flex-col h-full border border-stone-700 overflow-y-auto">
+                        {selectedSpellDetails ? (
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-start">
+                                    <h3 className="text-2xl font-bold text-white">{selectedSpellDetails.name}</h3>
+                                    <button 
+                                        onClick={() => addSpell(selectedSpellDetails)}
+                                        className="bg-dndRed hover:bg-red-700 text-white px-3 py-1 rounded font-bold shadow-lg"
+                                    >
+                                        <i className="fa-solid fa-plus mr-1"></i> Learn
+                                    </button>
+                                </div>
+                                <div className="text-sm text-gray-400 italic mb-2 border-b border-stone-600 pb-2">
+                                    Level {selectedSpellDetails.level} {selectedSpellDetails.school?.name}
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-sm text-gray-300 mb-4 bg-stone-900 p-3 rounded">
+                                    <div><strong>Casting Time:</strong> {selectedSpellDetails.casting_time}</div>
+                                    <div><strong>Range:</strong> {selectedSpellDetails.range}</div>
+                                    <div><strong>Components:</strong> {selectedSpellDetails.components.join(", ")}</div>
+                                    <div><strong>Duration:</strong> {selectedSpellDetails.duration}</div>
+                                </div>
+                                <div className="text-sm text-gray-200 space-y-2">
+                                    {selectedSpellDetails.desc.map((p, i) => <p key={i}>{p}</p>)}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex-grow flex items-center justify-center text-stone-500 italic text-center">
+                                Select a spell from the list to view its complete 5e API details.
+                            </div>
+                        )}
+
+                        <div className="mt-8 border-t border-stone-600 pt-4">
+                            <h4 className="font-bold text-dndRed mb-2">Your Known Spells ({character.spells.length})</h4>
+                            <div className="flex flex-wrap gap-2">
+                                {character.spells.map(s => (
+                                    <span key={s.index} className="bg-stone-900 border border-stone-600 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                                        {s.name}
+                                        <i className="fa-solid fa-xmark text-red-500 cursor-pointer hover:text-red-400" onClick={() => removeSpell(s.index)}></i>
+                                    </span>
+                                ))}
+                                {character.spells.length === 0 && <span className="text-sm text-stone-500">None</span>}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [step, setStep] = useState(1);
+            const [loading, setLoading] = useState(true);
+            
+            // Core API Data
+            const [apiData, setApiData] = useState({
+                classes: [],
+                races: []
+            });
+
+            // Subclasses for selected class
+            const [subclasses, setSubclasses] = useState([]);
+
+            // Character State
+            const [character, setCharacter] = useState({
+                name: "",
+                level: 1,
+                race: null,
+                charClass: null,
+                subclass: null,
+                stats: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
+                armorClass: 10,
+                maxHp: 10,
+                spells: [],
+                features: [],
+                equipment: { armor: false, shield: false }
+            });
+
+            useEffect(() => {
+                const initData = async () => {
+                    setLoading(true);
+                    let classes = await fetchAPI('classes');
+                    const races = await fetchAPI('races');
+                    
+                    const hasArtificer = classes.some(c => c.index === 'artificer');
+                    if (!hasArtificer) {
+                        classes.push({ index: 'artificer', name: 'Artificer', url: '/api/classes/artificer' });
+                        classes.sort((a, b) => a.name.localeCompare(b.name));
+                    }
+
+                    setApiData({ classes, races });
+                    setLoading(false);
+                };
+                initData();
+            }, []);
+
+            // Fetch & Combine Subclasses for Class (API + Comprehensive Fallbacks)
+            useEffect(() => {
+                const loadSubclasses = async () => {
+                    if (!character.charClass) {
+                        setSubclasses([]);
+                        return;
+                    }
+                    const apiSubs = await fetchAPI(`classes/${character.charClass.index}/subclasses`);
+                    const fallbackSubs = COMPREHENSIVE_SUBCLASSES[character.charClass.index] || [];
+                    
+                    const combinedMap = new Map();
+                    fallbackSubs.forEach(s => combinedMap.set(s.index, s));
+                    apiSubs.forEach(s => combinedMap.set(s.index, s));
+                    
+                    setSubclasses(Array.from(combinedMap.values()));
+                };
+                loadSubclasses();
+            }, [character.charClass?.index]);
+
+            // Fetch Class Features / Abilities dynamically with robust array safeguards
+            useEffect(() => {
+                const loadFeatures = async () => {
+                    if (!character.charClass) return;
+                    try {
+                        const response = await fetch(`${API_BASE}/classes/${character.charClass.index}/levels`);
+                        const levelsData = await response.json();
+                        
+                        const levelsArray = Array.isArray(levelsData) ? levelsData : (levelsData.results || []);
+                        
+                        let featureUrls = [];
+                        levelsArray.forEach(lvl => {
+                            if (lvl.level <= character.level && lvl.features) {
+                                lvl.features.forEach(f => featureUrls.push(f.url));
+                            }
+                        });
+
+                        featureUrls = [...new Set(featureUrls)];
+
+                        const featureDetails = await Promise.all(
+                            featureUrls.map(url => fetchDetails(url))
+                        );
+                        
+                        setCharacter(prev => ({
+                            ...prev, 
+                            features: featureDetails.filter(f => f !== null)
+                        }));
+                    } catch (err) {
+                        console.error("Error loading features:", err);
+                        setCharacter(prev => ({
+                            ...prev,
+                            features: [{ name: "Class Features", desc: ["Features could not be retrieved from API for this level/class combination."] }]
+                        }));
+                    }
+                };
+                loadFeatures();
+            }, [character.charClass?.index, character.level]);
+
+            // Handlers
+            const updateStat = (stat, value) => {
+                const newStats = { ...character.stats, [stat]: parseInt(value) || 0 };
+                const conMod = Math.floor((newStats.CON - 10) / 2);
+                const dexMod = Math.floor((newStats.DEX - 10) / 2);
+                const baseHp = character.charClass ? 8 : 8; 
+                
+                let acBonus = 0;
+                if (character.equipment.armor) acBonus += 2;
+                if (character.equipment.shield) acBonus += 1;
+                
+                setCharacter({
+                    ...character, 
+                    stats: newStats,
+                    maxHp: (baseHp + conMod) * character.level,
+                    armorClass: 10 + dexMod + acBonus
+                });
+            };
+
+            const toggleEquipment = (item) => {
+                const newEq = { ...character.equipment, [item]: !character.equipment[item] };
+                const conMod = Math.floor((character.stats.CON - 10) / 2);
+                const dexMod = Math.floor((character.stats.DEX - 10) / 2);
+                const baseHp = character.charClass ? 8 : 8; 
+
+                let acBonus = 0;
+                if (newEq.armor) acBonus += 2;
+                if (newEq.shield) acBonus += 1;
+
+                setCharacter({
+                    ...character,
+                    equipment: newEq,
+                    maxHp: (baseHp + conMod) * character.level,
+                    armorClass: 10 + dexMod + acBonus
+                });
+            };
+
+            const nextStep = () => setStep(s => Math.min(s + 1, 5));
+            const prevStep = () => setStep(s => Math.max(s - 1, 1));
+
+            if (loading) {
+                return <div className="h-screen flex flex-col items-center justify-center text-white">
+                    <div className="loader mb-4"></div>
+                    <p>Consulting the ancient tomes (D&D 5e API)...</p>
+                </div>;
+            }
+
+            return (
+                <div className="container mx-auto p-4 md:p-8">
+                    {/* Header */}
+                    <header className="mb-8 text-center">
+                        <h1 className="text-4xl md:text-5xl font-bold text-white tracking-widest uppercase font-serif drop-shadow-md">
+                            <span className="text-dndRed">D&D 5e</span> Character Forge
+                        </h1>
+                        <p className="text-stone-400 mt-2">Powered by the Official D&D 5e API & Complete Subclass Expansion</p>
+                    </header>
+
+                    {/* Progress Bar */}
+                    {step < 5 && (
+                        <div className="max-w-3xl mx-auto mb-8 flex justify-between relative">
+                            <div className="absolute top-1/2 left-0 w-full h-1 bg-stone-800 -z-10 transform -translate-y-1/2"></div>
+                            {['Basics', 'Race & Class', 'Abilities', 'Spells'].map((label, idx) => (
+                                <div key={idx} className={`flex flex-col items-center ${step >= idx + 1 ? 'text-dndRed' : 'text-stone-600'}`}>
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mb-2 ${step >= idx + 1 ? 'bg-dndRed text-white shadow-[0_0_10px_rgba(226,40,34,0.6)]' : 'bg-stone-800'}`}>
+                                        {idx + 1}
+                                    </div>
+                                    <span className="text-xs uppercase font-bold tracking-wider bg-[#121212] px-2">{label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Main Content Area */}
+                    <main className="max-w-5xl mx-auto bg-stone-900/80 p-6 md:p-8 rounded-xl shadow-2xl border border-stone-800 backdrop-blur-sm">
+                        
+                        {/* STEP 1: Name & Level */}
+                        {step === 1 && (
+                            <div className="space-y-6 max-w-xl mx-auto">
+                                <h2 className="text-2xl font-bold text-white mb-6 border-b border-stone-700 pb-2">1. Who are you?</h2>
+                                
+                                <div>
+                                    <label className="block text-stone-400 font-bold mb-2">Character Name</label>
+                                    <input 
+                                        type="text" 
+                                        className="w-full p-4 rounded bg-stone-800 text-xl text-white border border-stone-600 focus:border-dndRed focus:outline-none focus:ring-1 focus:ring-dndRed transition"
+                                        placeholder="E.g. Drizzt Do'Urden"
+                                        value={character.name}
+                                        onChange={(e) => setCharacter({...character, name: e.target.value})}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-stone-400 font-bold mb-2">Level (1-20)</label>
+                                    <input 
+                                        type="number" 
+                                        min="1" max="20"
+                                        className="w-full p-4 rounded bg-stone-800 text-xl text-white border border-stone-600 focus:border-dndRed focus:outline-none focus:ring-1 focus:ring-dndRed transition"
+                                        value={character.level}
+                                        onChange={(e) => {
+                                            const lvl = parseInt(e.target.value);
+                                            const newLvl = lvl > 20 ? 20 : (lvl < 1 ? 1 : lvl);
+                                            const conMod = Math.floor((character.stats.CON - 10) / 2);
+                                            const baseHp = character.charClass ? 8 : 8;
+                                            setCharacter({...character, level: newLvl, maxHp: (baseHp + conMod) * newLvl});
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* STEP 2: Race & Class */}
+                        {step === 2 && (
+                            <div className="space-y-8">
+                                <h2 className="text-2xl font-bold text-white mb-6 border-b border-stone-700 pb-2">2. Origins, Profession & Archetype</h2>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div>
+                                        <label className="block text-stone-400 font-bold mb-4 uppercase tracking-wider text-sm"><i className="fa-solid fa-users mr-2"></i>Select Race</label>
+                                        <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
+                                            {apiData.races.map(race => (
+                                                <button 
+                                                    key={race.index}
+                                                    onClick={() => setCharacter({...character, race})}
+                                                    className={`w-full p-3 rounded text-left transition border ${character.race?.index === race.index ? 'bg-dndRed/20 border-dndRed text-white shadow-[0_0_15px_rgba(226,40,34,0.3)]' : 'bg-stone-800 border-stone-700 text-stone-300 hover:bg-stone-700 hover:border-stone-500'}`}
+                                                >
+                                                    {race.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-stone-400 font-bold mb-4 uppercase tracking-wider text-sm"><i className="fa-solid fa-khanda mr-2"></i>Select Class</label>
+                                        <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
+                                            {apiData.classes.map(cls => (
+                                                <button 
+                                                    key={cls.index}
+                                                    onClick={() => setCharacter({...character, charClass: cls, subclass: null})}
+                                                    className={`w-full p-3 rounded text-left transition border ${character.charClass?.index === cls.index ? 'bg-dndRed/20 border-dndRed text-white shadow-[0_0_15px_rgba(226,40,34,0.3)]' : 'bg-stone-800 border-stone-700 text-stone-300 hover:bg-stone-700 hover:border-stone-500'}`}
+                                                >
+                                                    {cls.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-stone-400 font-bold mb-4 uppercase tracking-wider text-sm"><i className="fa-solid fa-shield-cat mr-2"></i>Select Subclass</label>
+                                        <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
+                                            {character.charClass ? (
+                                                subclasses.length > 0 ? (
+                                                    subclasses.map(sub => (
+                                                        <button 
+                                                            key={sub.index}
+                                                            onClick={() => setCharacter({...character, subclass: sub})}
+                                                            className={`w-full p-3 rounded text-left transition border ${character.subclass?.index === sub.index ? 'bg-dndRed/20 border-dndRed text-white shadow-[0_0_15px_rgba(226,40,34,0.3)]' : 'bg-stone-800 border-stone-700 text-stone-300 hover:bg-stone-700 hover:border-stone-500'}`}
+                                                        >
+                                                            {sub.name}
+                                                        </button>
+                                                    ))
+                                                ) : (
+                                                    <p className="text-sm text-stone-500 italic p-3 bg-stone-800 rounded border border-stone-700">Loading subclasses...</p>
+                                                )
+                                            ) : (
+                                                <p className="text-sm text-stone-500 italic p-3 bg-stone-800 rounded border border-stone-700">Select a class first.</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* STEP 3: Ability Scores */}
+                        {step === 3 && (
+                            <div className="space-y-6">
+                                <h2 className="text-2xl font-bold text-white mb-6 border-b border-stone-700 pb-2">3. Ability Scores & Basic Equipment</h2>
+                                <p className="text-stone-400 mb-6">Enter your rolled stats and select basic combat gear for AC bonuses.</p>
+                                
+                                <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+                                    {Object.keys(character.stats).map(stat => (
+                                        <div key={stat} className="bg-stone-800 p-4 rounded text-center border border-stone-700">
+                                            <label className="block font-bold text-stone-300 mb-2">{stat}</label>
+                                            <input 
+                                                type="number" 
+                                                min="1" max="30"
+                                                className="w-full bg-stone-900 text-white text-center text-2xl p-2 rounded border border-stone-600 focus:border-dndRed focus:outline-none"
+                                                value={character.stats[stat]}
+                                                onChange={(e) => updateStat(stat, e.target.value)}
+                                            />
+                                            <div className="mt-2 text-sm font-bold text-dndRed">
+                                                Mod: {Math.floor((character.stats[stat] - 10) / 2) >= 0 ? '+' : ''}{Math.floor((character.stats[stat] - 10) / 2)}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="bg-stone-800 p-6 rounded-lg border border-stone-700 mt-6">
+                                    <h3 className="text-lg font-bold text-white mb-4"><i className="fa-solid fa-shield-halved mr-2"></i>Combat Equipment</h3>
+                                    <div className="flex gap-6">
+                                        <label className="flex items-center gap-2 text-stone-300 cursor-pointer hover:text-white transition">
+                                            <input 
+                                                type="checkbox" 
+                                                className="w-5 h-5 accent-dndRed"
+                                                checked={character.equipment.armor}
+                                                onChange={() => toggleEquipment('armor')}
+                                            />
+                                            Wear Armor (+2 AC)
+                                        </label>
+                                        <label className="flex items-center gap-2 text-stone-300 cursor-pointer hover:text-white transition">
+                                            <input 
+                                                type="checkbox" 
+                                                className="w-5 h-5 accent-dndRed"
+                                                checked={character.equipment.shield}
+                                                onChange={() => toggleEquipment('shield')}
+                                            />
+                                            Equip Shield (+1 AC)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* STEP 4: Spells API Integration */}
+                        {step === 4 && (
+                            <div className="space-y-6">
+                                <h2 className="text-2xl font-bold text-white mb-2 border-b border-stone-700 pb-2">4. Spellcasting & Grimoire</h2>
+                                <p className="text-stone-400 mb-6">
+                                    Accessing the complete D&D 5e Spell API. Search and add spells to your character's spellbook.
+                                </p>
+                                <SpellSelector character={character} setCharacter={setCharacter} />
+                            </div>
+                        )}
+
+                        {/* STEP 5: Final Sheet Review */}
+                        {step === 5 && (
+                            <div className="animation-fade-in">
+                                <CharacterSheet character={character} onEdit={() => setStep(1)} />
+                            </div>
+                        )}
+
+                        {/* Navigation Buttons */}
+                        {step < 5 && (
+                            <div className="mt-10 flex justify-between border-t border-stone-800 pt-6">
+                                <button 
+                                    onClick={prevStep}
+                                    disabled={step === 1}
+                                    className={`px-6 py-3 rounded font-bold transition ${step === 1 ? 'opacity-0 cursor-default' : 'bg-stone-800 hover:bg-stone-700 text-white'}`}
+                                >
+                                    <i className="fa-solid fa-arrow-left mr-2"></i> Back
+                                </button>
+                                
+                                <button 
+                                    onClick={nextStep}
+                                    className="px-8 py-3 rounded font-bold bg-dndRed hover:bg-red-700 text-white shadow-[0_4px_14px_0_rgba(226,40,34,0.39)] hover:shadow-[0_6px_20px_rgba(226,40,34,0.23)] hover:-translate-y-0.5 transition duration-200"
+                                >
+                                    {step === 4 ? 'Forge Character' : 'Next Step'} <i className="fa-solid fa-arrow-right ml-2"></i>
+                                </button>
+                            </div>
+                        )}
+
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
