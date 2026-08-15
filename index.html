@@ -554,6 +554,11 @@
                         }));
                     } catch (err) {
                         console.error("Error loading features:", err);
+                        // Fallback default feature if fetch fails
+                        setCharacter(prev => ({
+                            ...prev,
+                            features: [{ name: `${character.charClass.name} Core Training`, desc: [`Standard training and proficiency associated with level ${character.level} ${character.charClass.name}.`] }]
+                        }));
                     }
                 };
                 loadFeatures();
@@ -580,13 +585,29 @@
                 const avgHpPerLevel = Math.floor(hitDie / 2) + 1;
                 const maxHp = Math.max(level, (hitDie + conMod) + (level > 1 ? (avgHpPerLevel + conMod) * (level - 1) : 0));
 
-                let acBonus = 0;
-                if (equipment.armor) acBonus += 2;
-                if (equipment.shield) acBonus += 1;
-                const armorClass = 10 + dexMod + acBonus;
+                // Robust Armor Class Calculation based on D&D 5e Rules
+                let armorClass = 10;
+                if (equipment.armorType === 'none') {
+                    armorClass = 10 + dexMod;
+                } else if (equipment.armorType === 'light') {
+                    armorClass = 11 + dexMod; // e.g. Leather Armor
+                } else if (equipment.armorType === 'medium') {
+                    armorClass = 14 + Math.min(2, dexMod); // e.g. Scale Mail / Breastplate (max +2 DEX)
+                } else if (equipment.armorType === 'heavy') {
+                    armorClass = 16; // e.g. Chain Mail (no DEX modifier)
+                } else if (equipment.armorType === 'plate') {
+                    armorClass = 18; // Full Plate (no DEX modifier)
+                }
+
+                if (equipment.shield) {
+                    armorClass += 2; // Shield gives +2 AC in 5e
+                }
 
                 setCharacter(prev => ({
                     ...prev,
+                    level,
+                    charClass,
+                    equipment,
                     baseStats,
                     racialBonuses,
                     asiBonuses,
@@ -614,8 +635,8 @@
                 updateDerivedStats(character.baseStats, character.racialBonuses, newAsi, character.equipment, character.level, character.charClass);
             };
 
-            const toggleEquipment = (item) => {
-                const newEq = { ...character.equipment, [item]: !character.equipment[item] };
+            const updateEquipment = (key, value) => {
+                const newEq = { ...character.equipment, [key]: value };
                 updateDerivedStats(character.baseStats, character.racialBonuses, character.asiBonuses, newEq, character.level, character.charClass);
             };
 
@@ -690,7 +711,7 @@
                                             updateDerivedStats(character.baseStats, character.racialBonuses, character.asiBonuses, character.equipment, newLvl, character.charClass);
                                         }}
                                     />
-                                    <p className="text-stone-500 text-xs mt-1">Leveling up automatically unlocks Ability Score Improvements (ASIs) at appropriate levels.</p>
+                                    <p className="text-stone-500 text-xs mt-1">Leveling up automatically adjusts Hit Points, features, and Ability Score Improvements (ASIs).</p>
                                 </div>
                             </div>
                         )}
@@ -875,26 +896,36 @@
                                 </div>
 
                                 <div className="bg-stone-800 p-6 rounded-lg border border-stone-700 mt-6">
-                                    <h3 className="text-lg font-bold text-white mb-4"><i className="fa-solid fa-shield-halved mr-2"></i>Combat Equipment</h3>
-                                    <div className="flex gap-6">
-                                        <label className="flex items-center gap-2 text-stone-300 cursor-pointer hover:text-white transition">
-                                            <input 
-                                                type="checkbox" 
-                                                className="w-5 h-5 accent-dndRed"
-                                                checked={character.equipment.armor}
-                                                onChange={() => toggleEquipment('armor')}
-                                            />
-                                            Wear Armor (+2 AC)
-                                        </label>
-                                        <label className="flex items-center gap-2 text-stone-300 cursor-pointer hover:text-white transition">
-                                            <input 
-                                                type="checkbox" 
-                                                className="w-5 h-5 accent-dndRed"
-                                                checked={character.equipment.shield}
-                                                onChange={() => toggleEquipment('shield')}
-                                            />
-                                            Equip Shield (+1 AC)
-                                        </label>
+                                    <h3 className="text-lg font-bold text-white mb-4"><i className="fa-solid fa-shield-halved mr-2"></i>Armor & Equipment (AC Calculation)</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-stone-400 text-sm font-bold mb-2">Armor Type</label>
+                                            <select 
+                                                className="w-full p-3 rounded bg-stone-900 text-white border border-stone-700 focus:border-dndRed focus:outline-none"
+                                                value={character.equipment.armorType || 'none'}
+                                                onChange={(e) => updateEquipment('armorType', e.target.value)}
+                                            >
+                                                <option value="none">Unarmored (10 + DEX)</option>
+                                                <option value="light">Light Armor / Leather (11 + DEX)</option>
+                                                <option value="medium">Medium Armor / Scale Mail (14 + DEX, max +2)</option>
+                                                <option value="heavy">Heavy Armor / Chain Mail (16 flat)</option>
+                                                <option value="plate">Full Plate (18 flat)</option>
+                                            </select>
+                                        </div>
+                                        <div className="flex items-center pt-6">
+                                            <label className="flex items-center gap-3 text-stone-300 cursor-pointer hover:text-white transition">
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="w-5 h-5 accent-dndRed"
+                                                    checked={character.equipment.shield || false}
+                                                    onChange={(e) => updateEquipment('shield', e.target.checked)}
+                                                />
+                                                <span className="font-bold">Equip Shield (+2 AC)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 text-xs text-stone-400 bg-stone-900 p-3 rounded border border-stone-700">
+                                        Current Calculated Armor Class (AC): <strong className="text-dndRed text-base ml-1">{character.armorClass}</strong>
                                     </div>
                                 </div>
                             </div>
