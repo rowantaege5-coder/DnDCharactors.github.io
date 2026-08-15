@@ -279,6 +279,59 @@
             ]
         };
 
+        const FALLBACK_BACKGROUNDS = [
+            { name: 'Acolyte', skills: 'Insight, Religion', feature: 'Shelter of the Faithful', desc: 'You have spent your life in service to a temple of a specific god or pantheon of gods.' },
+            { name: 'Criminal / Spy', skills: 'Deception, Stealth', feature: 'Criminal Contact', desc: 'You are an experienced criminal with a history of breaking the law.' },
+            { name: 'Folk Hero', skills: 'Animal Handling, Survival', feature: 'Rustic Hospitality', desc: 'You come from a humble social rank, but you are destined for so much more.' },
+            { name: 'Noble', skills: 'History, Persuasion', feature: 'Position of Privilege', desc: 'You understand wealth, power, and privilege. You carry a noble title.' },
+            { name: 'Sage', skills: 'Arcana, History', feature: 'Researcher', desc: 'You spent years learning the lore of the multiverse.' },
+            { name: 'Soldier', skills: 'Athletics, Intimidation', feature: 'Military Rank', desc: 'You have been trained in military tactics and combat.' },
+            { name: 'Charlatan', skills: 'Deception, Sleight of Hand', feature: 'False Identity', desc: 'You have always been a gambler, flimflam artist, or con artist.' },
+            { name: 'Hermit', skills: 'Medicine, Religion', feature: 'Discovery', desc: 'You lived in seclusion—either in a sheltered community or entirely alone.' }
+        ];
+
+        const COMMON_ITEMS = [
+            { name: 'Healing Potion', type: 'Potion', desc: 'Restores 2d4 + 2 hit points when consumed.' },
+            { name: 'Greater Healing Potion', type: 'Potion', desc: 'Restores 4d4 + 4 hit points when consumed.' },
+            { name: 'Superior Healing Potion', type: 'Potion', desc: 'Restores 8d4 + 8 hit points when consumed.' },
+            { name: 'Potion of Invisibility', type: 'Potion', desc: 'Grants invisibility for up to 1 hour.' },
+            { name: 'Potion of Speed', type: 'Potion', desc: 'Grants the effects of the Haste spell for 1 minute.' },
+            { name: 'Longsword', type: 'Weapon', desc: '1d8 slashing damage (1d10 versatile).' },
+            { name: 'Shortsword', type: 'Weapon', desc: '1d6 piercing damage, finesse, light.' },
+            { name: 'Greatsword', type: 'Weapon', desc: '2d6 slashing damage, heavy, two-handed.' },
+            { name: 'Dagger', type: 'Weapon', desc: '1d4 piercing damage, finesse, light, thrown.' },
+            { name: 'Battleaxe', type: 'Weapon', desc: '1d8 slashing damage (1d10 versatile).' },
+            { name: 'Greataxe', type: 'Weapon', desc: '1d12 slashing damage, heavy, two-handed.' },
+            { name: 'Shortbow', type: 'Weapon', desc: '1d6 piercing damage (range 80/320).' },
+            { name: 'Longbow', type: 'Weapon', desc: '1d8 piercing damage (range 150/600), heavy.' },
+            { name: 'Heavy Crossbow', type: 'Weapon', desc: '1d10 piercing damage, heavy, loading.' },
+            { name: 'Quarterstaff', type: 'Weapon', desc: '1d6 bludgeoning damage (1d8 versatile).' },
+            { name: 'Rapier', type: 'Weapon', desc: '1d8 piercing damage, finesse.' },
+            { name: 'Scimitar', type: 'Weapon', desc: '1d6 slashing damage, finesse, light.' },
+            { name: 'Shield', type: 'Armor', desc: '+2 Bonus to Armor Class.' },
+            { name: 'Leather Armor', type: 'Armor', desc: 'Light armor, AC 11 + Dex modifier.' },
+            { name: 'Studded Leather', type: 'Armor', desc: 'Light armor, AC 12 + Dex modifier.' },
+            { name: 'Chain Shirt', type: 'Armor', desc: 'Medium armor, AC 13 + Dex (max 2).' },
+            { name: 'Scale Mail', type: 'Armor', desc: 'Medium armor, AC 14 + Dex (max 2), disadvantage on Stealth.' },
+            { name: 'Breastplate', type: 'Armor', desc: 'Medium armor, AC 14 + Dex (max 2).' },
+            { name: 'Chain Mail', type: 'Armor', desc: 'Heavy armor, AC 16 (requires STR 13).' },
+            { name: 'Splint Armor', type: 'Armor', desc: 'Heavy armor, AC 17 (requires STR 15).' },
+            { name: 'Plate Armor', type: 'Armor', desc: 'Heavy armor, AC 18 (requires STR 15).' },
+            { name: 'Thieves Tools', type: 'Gear', desc: 'Includes small file, skeleton keys, mirror, pliers.' },
+            { name: 'Spellbook', type: 'Gear', desc: 'Leather-bound book with 100 blank vellum pages for spells.' },
+            { name: 'Alchemists Fire', type: 'Gear', desc: 'Flask of sticky, adhesive fluid that ignites on air exposure.' },
+            { name: 'Explorer Pack', type: 'Gear', desc: 'Backpack, bedroll, mess kit, tinderbox, 10 days rations, waterskin.' },
+            { name: 'Dungeoneer Pack', type: 'Gear', desc: 'Backpack, crowbar, hammer, 10 pitons, 10 days rations, torch, rope.' },
+            { name: 'Burglar Pack', type: 'Gear', desc: 'Backpack, bag of 1000 ball bearings, 10ft string, bell, hooded lantern, oil.' },
+            { name: 'Healer Kit', type: 'Gear', desc: 'Leather pouch containing bandages, salves, and splints (10 uses).' },
+            { name: 'Climber Kit', type: 'Gear', desc: 'Specialist harness, pitons, boots, and 50ft hempen rope.' },
+            { name: 'Bag of Holding', type: 'Magical', desc: 'Extra-dimensional space holding up to 500 lbs regardless of weight.' },
+            { name: 'Cloak of Protection', type: 'Magical', desc: '+1 bonus to Armor Class and all saving throws while worn.' },
+            { name: 'Ring of Protection', type: 'Magical', desc: '+1 bonus to AC and saving throws.' },
+            { name: 'Wand of Magic Missiles', type: 'Magical', desc: 'Contains 7 charges to cast Magic Missile spells.' },
+            { name: 'Everburning Torch', type: 'Magical', desc: 'Emits bright light in a 20-foot radius indefinitely.' }
+        ];
+
         const fetchAPI = async (endpoint) => {
             try {
                 const controller = new AbortController();
@@ -333,6 +386,9 @@
                             <div className="text-lg text-gray-700 mt-2">
                                 {character.race?.name || "Unknown Race"} {character.subclass ? `(${character.subclass.name}) ` : ''}{character.charClass?.name || "Unknown Class"} - Level {character.level}
                             </div>
+                            <div className="text-sm text-gray-600 mt-1">
+                                <strong>Background:</strong> {character.background?.name || 'Acolyte'} ({character.background?.feature || 'Feature'})
+                            </div>
                         </div>
                         <button onClick={onEdit} className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition text-sm font-sans">
                             <i className="fa-solid fa-pen mr-2"></i>Edit Character
@@ -353,9 +409,6 @@
                                                 <span className="font-bold text-gray-600 w-12">{stat}</span>
                                                 <div className="text-center">
                                                     <span className="text-xl font-bold text-red-900">{finalVal}</span>
-                                                    <div className="text-[10px] text-gray-500">
-                                                        (Base:{character.baseStats[stat]} + R:{character.racialBonuses[stat] || 0} + ASI:{character.asiBonuses[stat] || 0})
-                                                    </div>
                                                 </div>
                                                 <span className="text-sm font-bold w-10 text-right text-gray-700">
                                                     {mod >= 0 ? '+' : ''}{mod}
@@ -376,42 +429,306 @@
                                     <div className="text-3xl font-bold text-red-900">{character.maxHp}</div>
                                 </div>
                             </div>
+
+                            {/* Gold Pouch */}
+                            <div className="bg-white/50 p-4 border-2 border-gray-400 rounded-lg shadow-sm">
+                                <h3 className="font-bold text-gray-800 border-b border-gray-400 pb-1 mb-2 uppercase tracking-widest text-xs">Coinage</h3>
+                                <div className="flex justify-around text-sm font-bold text-red-900">
+                                    <div>{character.gold?.gp || 0} <span className="text-xs text-gray-600">GP</span></div>
+                                    <div>{character.gold?.sp || 0} <span className="text-xs text-gray-600">SP</span></div>
+                                    <div>{character.gold?.cp || 0} <span className="text-xs text-gray-600">CP</span></div>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Details Column */}
                         <div className="col-span-1 md:col-span-2 space-y-4">
-                            <div className="bg-white/50 p-4 border-2 border-gray-400 rounded-lg shadow-sm h-full flex flex-col">
-                                <h3 className="font-bold text-gray-800 border-b border-gray-400 pb-1 mb-3 uppercase tracking-widest text-sm">Features, Traits & Abilities</h3>
-                                {character.features && character.features.length > 0 ? (
-                                    <div className="space-y-3 overflow-y-auto max-h-[400px] pr-2">
-                                        {character.features.map((feature, idx) => (
-                                            <div key={idx} className="bg-white p-3 rounded border border-gray-300 text-sm shadow-sm">
-                                                <span className="font-bold text-red-900 block mb-1">{feature.name}</span>
-                                                <div className="text-gray-700 text-xs leading-relaxed space-y-1">
-                                                    {feature.desc ? feature.desc.map((p, i) => <p key={i}>{p}</p>) : <p>No description available.</p>}
+                            <div className="bg-white/50 p-4 border-2 border-gray-400 rounded-lg shadow-sm">
+                                <h3 className="font-bold text-gray-800 border-b border-gray-400 pb-1 mb-2 uppercase tracking-widest text-sm">Background & Personality</h3>
+                                <p className="text-sm text-gray-700 mb-2"><strong>Trait:</strong> {character.background?.trait || 'Reliable and steadfast in the face of danger.'}</p>
+                                <p className="text-sm text-gray-700 mb-2"><strong>Ideal:</strong> {character.background?.ideal || 'Justice. Upholding fairness for all.'}</p>
+                                <p className="text-sm text-gray-700 mb-2"><strong>Bond:</strong> {character.background?.bond || 'Protector of the innocent.'}</p>
+                                <p className="text-sm text-gray-700"><strong>Flaw:</strong> {character.background?.flaw || 'Too trusting of strangers.'}</p>
+                            </div>
+
+                            <div className="bg-white/50 p-4 border-2 border-gray-400 rounded-lg shadow-sm">
+                                <h3 className="font-bold text-gray-800 border-b border-gray-400 pb-1 mb-2 uppercase tracking-widest text-sm">Inventory & Items ({character.inventory.length})</h3>
+                                {character.inventory.length > 0 ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                                        {character.inventory.map((item, idx) => (
+                                            <div key={idx} className="bg-white p-2 rounded border border-gray-300 text-xs">
+                                                <div className="flex justify-between font-bold text-red-900">
+                                                    <span>{item.name}</span>
+                                                    <span>x{item.qty}</span>
                                                 </div>
+                                                <div className="text-gray-600 mt-1">{item.desc}</div>
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="text-sm text-gray-500 italic flex-grow">
-                                        {character.charClass ? "No features available for this selection." : "Select a class to gain abilities."}
-                                    </p>
+                                    <p className="text-xs text-gray-500 italic">No items in inventory.</p>
                                 )}
+                            </div>
 
-                                <h3 className="font-bold text-gray-800 border-b border-gray-400 pb-1 mb-3 mt-6 uppercase tracking-widest text-sm">Spellbook ({character.spells.length})</h3>
-                                {character.spells.length > 0 ? (
-                                    <ul className="space-y-2">
-                                        {character.spells.map((spell, idx) => (
-                                            <li key={idx} className="bg-white p-2 rounded border border-gray-300 text-sm flex justify-between">
-                                                <span className="font-bold text-red-900">{spell.name}</span>
-                                                <span className="text-gray-500 text-xs">Level {spell.level} • {spell.school?.name}</span>
-                                            </li>
+                            <div className="bg-white/50 p-4 border-2 border-gray-400 rounded-lg shadow-sm">
+                                <h3 className="font-bold text-gray-800 border-b border-gray-400 pb-1 mb-2 uppercase tracking-widest text-sm">Features & Traits</h3>
+                                {character.features && character.features.length > 0 ? (
+                                    <div className="space-y-2 max-h-[180px] overflow-y-auto pr-2">
+                                        {character.features.map((feature, idx) => (
+                                            <div key={idx} className="bg-white p-2 rounded border border-gray-300 text-xs">
+                                                <span className="font-bold text-red-950 block">{feature.name}</span>
+                                                <div className="text-gray-700">{feature.desc?.[0] || 'Feature description.'}</div>
+                                            </div>
                                         ))}
-                                    </ul>
+                                    </div>
                                 ) : (
-                                    <p className="text-sm text-gray-500 italic">No spells learned.</p>
+                                    <p className="text-xs text-gray-500 italic">No features available.</p>
                                 )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const BackgroundSelector = ({ character, setCharacter }) => {
+            const bg = character.background || { name: 'Acolyte', skills: 'Insight, Religion', feature: 'Shelter of the Faithful', trait: '', ideal: '', bond: '', flaw: '' };
+
+            const updateBg = (field, val) => {
+                setCharacter({
+                    ...character,
+                    background: { ...bg, [field]: val }
+                });
+            };
+
+            return (
+                <div className="space-y-6">
+                    <h2 className="text-2xl font-bold text-white mb-2 border-b border-stone-700 pb-2">2. Background & Personality</h2>
+                    <p className="text-stone-400 text-sm">Select your hero's background origin and define their personality traits, ideals, bonds, and flaws.</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-stone-300 font-bold mb-2 text-sm">Preset Backgrounds</label>
+                            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                                {FALLBACK_BACKGROUNDS.map((item) => (
+                                    <div 
+                                        key={item.name}
+                                        onClick={() => setCharacter({ ...character, background: { ...bg, name: item.name, skills: item.skills, feature: item.feature, desc: item.desc } })}
+                                        className={`p-3 rounded border cursor-pointer transition ${bg.name === item.name ? 'bg-dndRed/20 border-dndRed text-white' : 'bg-stone-800 border-stone-700 text-stone-300 hover:bg-stone-700'}`}
+                                    >
+                                        <div className="font-bold">{item.name}</div>
+                                        <div className="text-xs text-stone-400 mt-1">Skills: {item.skills} • {item.feature}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 bg-stone-800 p-4 rounded border border-stone-700">
+                            <h3 className="font-bold text-white text-sm border-b border-stone-700 pb-1">Personal Characteristics</h3>
+                            <div>
+                                <label className="block text-xs text-stone-400 mb-1">Personality Trait</label>
+                                <input 
+                                    type="text" 
+                                    className="w-full p-2 rounded bg-stone-900 text-white text-sm border border-stone-700 focus:border-dndRed focus:outline-none"
+                                    value={bg.trait || ''}
+                                    onChange={(e) => updateBg('trait', e.target.value)}
+                                    placeholder="I idolize a hero of my faith..."
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-stone-400 mb-1">Ideal</label>
+                                <input 
+                                    type="text" 
+                                    className="w-full p-2 rounded bg-stone-900 text-white text-sm border border-stone-700 focus:border-dndRed focus:outline-none"
+                                    value={bg.ideal || ''}
+                                    onChange={(e) => updateBg('ideal', e.target.value)}
+                                    placeholder="Tradition. The ancient traditions must be preserved..."
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-stone-400 mb-1">Bond</label>
+                                <input 
+                                    type="text" 
+                                    className="w-full p-2 rounded bg-stone-900 text-white text-sm border border-stone-700 focus:border-dndRed focus:outline-none"
+                                    value={bg.bond || ''}
+                                    onChange={(e) => updateBg('bond', e.target.value)}
+                                    placeholder="I would die to recover an ancient relic..."
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-stone-400 mb-1">Flaw</label>
+                                <input 
+                                    type="text" 
+                                    className="w-full p-2 rounded bg-stone-900 text-white text-sm border border-stone-700 focus:border-dndRed focus:outline-none"
+                                    value={bg.flaw || ''}
+                                    onChange={(e) => updateBg('flaw', e.target.value)}
+                                    placeholder="I judge others harshly, and myself even more severely..."
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const InventoryManager = ({ character, setCharacter }) => {
+            const [newItemName, setNewItemName] = useState('');
+            const [newItemQty, setNewItemQty] = useState(1);
+            const [newItemDesc, setNewItemDesc] = useState('');
+            const [itemFilter, setItemFilter] = useState('All');
+            const [itemSearch, setItemSearch] = useState('');
+
+            const addItem = (item) => {
+                setCharacter({
+                    ...character,
+                    inventory: [...character.inventory, { name: item.name, qty: item.qty || 1, desc: item.desc || '' }]
+                });
+            };
+
+            const addCustomItem = (e) => {
+                e.preventDefault();
+                if (!newItemName.trim()) return;
+                addItem({ name: newItemName, qty: parseInt(newItemQty) || 1, desc: newItemDesc });
+                setNewItemName('');
+                setNewItemDesc('');
+                setNewItemQty(1);
+            };
+
+            const removeItem = (idx) => {
+                const updated = character.inventory.filter((_, i) => i !== idx);
+                setCharacter({ ...character, inventory: updated });
+            };
+
+            const updateGold = (currency, val) => {
+                const currentGold = character.gold || { gp: 0, sp: 0, cp: 0 };
+                setCharacter({
+                    ...character,
+                    gold: { ...currentGold, [currency]: Math.max(0, parseInt(val) || 0) }
+                });
+            };
+
+            const filteredCommonItems = COMMON_ITEMS.filter(item => {
+                const matchesCategory = itemFilter === 'All' || item.type === itemFilter;
+                const matchesSearch = item.name.toLowerCase().includes(itemSearch.toLowerCase()) || item.desc.toLowerCase().includes(itemSearch.toLowerCase());
+                return matchesCategory && matchesSearch;
+            });
+
+            return (
+                <div className="space-y-6">
+                    <h2 className="text-2xl font-bold text-white mb-2 border-b border-stone-700 pb-2">1. Items & Equipment Inventory</h2>
+                    <p className="text-stone-400 text-sm">Browse our extensive library of over 40+ D&D items, weapons, armor, magical gear, and currency.</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Add Quick Items with Filters */}
+                        <div className="bg-stone-800 p-4 rounded border border-stone-700 space-y-3 flex flex-col h-[520px]">
+                            <h3 className="font-bold text-white text-sm border-b border-stone-700 pb-1">Item Arsenal ({COMMON_ITEMS.length} Available)</h3>
+                            
+                            <input 
+                                type="text"
+                                placeholder="Search items..."
+                                className="w-full p-2 text-xs rounded bg-stone-900 text-white border border-stone-700 focus:border-dndRed focus:outline-none"
+                                value={itemSearch}
+                                onChange={(e) => setItemSearch(e.target.value)}
+                            />
+
+                            <div className="flex flex-wrap gap-1">
+                                {['All', 'Weapon', 'Armor', 'Potion', 'Gear', 'Magical'].map(cat => (
+                                    <button 
+                                        key={cat}
+                                        onClick={() => setItemFilter(cat)}
+                                        className={`px-2 py-1 text-[10px] font-bold rounded transition ${itemFilter === cat ? 'bg-dndRed text-white' : 'bg-stone-900 text-stone-400 hover:text-white'}`}
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="space-y-2 overflow-y-auto flex-grow pr-1">
+                                {filteredCommonItems.map((item) => (
+                                    <div key={item.name} className="flex justify-between items-center bg-stone-900 p-2 rounded text-xs">
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold text-white">{item.name}</span>
+                                                <span className="text-[9px] bg-stone-800 text-stone-400 px-1 rounded">{item.type}</span>
+                                            </div>
+                                            <div className="text-stone-400 text-[10px] mt-0.5">{item.desc}</div>
+                                        </div>
+                                        <button 
+                                            onClick={() => addItem({ name: item.name, qty: 1, desc: item.desc })}
+                                            className="bg-dndRed hover:bg-red-700 text-white px-2 py-1 rounded font-bold shrink-0 ml-2"
+                                        ><i className="fa-solid fa-plus"></i></button>
+                                    </div>
+                                ))}
+                                {filteredCommonItems.length === 0 && <p className="text-xs text-stone-500 italic text-center py-4">No items match your search.</p>}
+                            </div>
+                        </div>
+
+                        {/* Custom Item Form */}
+                        <div className="bg-stone-800 p-4 rounded border border-stone-700 space-y-3">
+                            <h3 className="font-bold text-white text-sm border-b border-stone-700 pb-1">Add Custom Item</h3>
+                            <form onSubmit={addCustomItem} className="space-y-3">
+                                <div>
+                                    <label className="block text-xs text-stone-400 mb-1">Item Name</label>
+                                    <input 
+                                        type="text" 
+                                        className="w-full p-2 rounded bg-stone-900 text-white text-sm border border-stone-700 focus:border-dndRed focus:outline-none"
+                                        value={newItemName}
+                                        onChange={(e) => setNewItemName(e.target.value)}
+                                        placeholder="E.g. Wand of Magic Bullets"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label className="block text-xs text-stone-400 mb-1">Quantity</label>
+                                        <input 
+                                            type="number" min="1"
+                                            className="w-full p-2 rounded bg-stone-900 text-white text-sm border border-stone-700 focus:border-dndRed focus:outline-none"
+                                            value={newItemQty}
+                                            onChange={(e) => setNewItemQty(e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-stone-400 mb-1">Currency (GP)</label>
+                                        <input 
+                                            type="number" min="0"
+                                            className="w-full p-2 rounded bg-stone-900 text-white text-sm border border-stone-700 focus:border-dndRed focus:outline-none"
+                                            value={character.gold?.gp || 0}
+                                            onChange={(e) => updateGold('gp', e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-stone-400 mb-1">Description / Properties</label>
+                                    <input 
+                                        type="text" 
+                                        className="w-full p-2 rounded bg-stone-900 text-white text-sm border border-stone-700 focus:border-dndRed focus:outline-none"
+                                        value={newItemDesc}
+                                        onChange={(e) => setNewItemDesc(e.target.value)}
+                                        placeholder="Magical property or weight..."
+                                    />
+                                </div>
+                                <button type="submit" className="w-full py-2 bg-dndRed hover:bg-red-700 text-white font-bold rounded text-sm transition">
+                                    Add to Inventory
+                                </button>
+                            </form>
+                        </div>
+
+                        {/* Current Inventory List */}
+                        <div className="bg-stone-800 p-4 rounded border border-stone-700 space-y-3 flex flex-col h-[520px]">
+                            <h3 className="font-bold text-white text-sm border-b border-stone-700 pb-1">Current Inventory ({character.inventory.length})</h3>
+                            <div className="space-y-2 overflow-y-auto flex-grow pr-1">
+                                {character.inventory.map((item, idx) => (
+                                    <div key={idx} className="flex justify-between items-start bg-stone-900 p-2 rounded text-xs">
+                                        <div>
+                                            <span className="font-bold text-white">{item.name} <span className="text-dndRed">(x{item.qty})</span></span>
+                                            <div className="text-stone-400 text-[10px] mt-0.5">{item.desc}</div>
+                                        </div>
+                                        <button onClick={() => removeItem(idx)} className="text-red-400 hover:text-red-300 ml-2">
+                                            <i className="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                ))}
+                                {character.inventory.length === 0 && <p className="text-xs text-stone-500 italic text-center py-8">Inventory is empty.</p>}
                             </div>
                         </div>
                     </div>
@@ -554,6 +871,7 @@
                 race: null,
                 charClass: null,
                 subclass: null,
+                background: { name: 'Acolyte', skills: 'Insight, Religion', feature: 'Shelter of the Faithful', trait: '', ideal: '', bond: '', flaw: '' },
                 baseStats: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
                 racialBonuses: { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 },
                 asiBonuses: { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 },
@@ -561,7 +879,12 @@
                 maxHp: 10,
                 spells: [],
                 features: [],
-                equipment: { armorType: 'none', shield: false }
+                equipment: { armorType: 'none', shield: false },
+                inventory: [
+                    { name: "Explorer's Pack", qty: 1, desc: "Backpack, bedroll, mess kit, rations, waterskin." },
+                    { name: "Dagger", qty: 1, desc: "1d4 piercing, finesse, light." }
+                ],
+                gold: { gp: 15, sp: 5, cp: 0 }
             });
 
             const loadAppData = async () => {
@@ -793,15 +1116,15 @@
                     </header>
 
                     {/* Progress Bar */}
-                    {step < 5 && (
-                        <div className="max-w-3xl mx-auto mb-8 flex justify-between relative">
+                    {step < 7 && (
+                        <div className="max-w-4xl mx-auto mb-8 flex justify-between relative">
                             <div className="absolute top-1/2 left-0 w-full h-1 bg-stone-800 -z-10 transform -translate-y-1/2"></div>
-                            {['Basics', 'Race & Class', 'Abilities & ASI', 'Spells'].map((label, idx) => (
+                            {['Basics', 'Race & Class', 'Background', 'Abilities', 'Items', 'Spells'].map((label, idx) => (
                                 <div key={idx} className={`flex flex-col items-center ${step >= idx + 1 ? 'text-dndRed' : 'text-stone-600'}`}>
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mb-2 ${step >= idx + 1 ? 'bg-dndRed text-white shadow-[0_0_10px_rgba(226,40,34,0.6)]' : 'bg-stone-800'}`}>
                                         {idx + 1}
                                     </div>
-                                    <span className="text-xs uppercase font-bold tracking-wider bg-[#121212] px-2">{label}</span>
+                                    <span className="text-[10px] uppercase font-bold tracking-wider bg-[#121212] px-1">{label}</span>
                                 </div>
                             ))}
                         </div>
@@ -839,7 +1162,6 @@
                                             updateDerivedStats(character.baseStats, character.racialBonuses, character.asiBonuses, character.equipment, newLvl, character.charClass);
                                         }}
                                     />
-                                    <p className="text-stone-500 text-xs mt-1">Leveling up automatically adjusts Hit Points, features, and Ability Score Improvements (ASIs).</p>
                                 </div>
                             </div>
                         )}
@@ -847,7 +1169,7 @@
                         {/* STEP 2: Race & Class */}
                         {step === 2 && (
                             <div className="space-y-8">
-                                <h2 className="text-2xl font-bold text-white mb-6 border-b border-stone-700 pb-2">2. Origins, Profession & Archetype</h2>
+                                <h2 className="text-2xl font-bold text-white mb-6 border-b border-stone-700 pb-2">2. Origins & Profession</h2>
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div>
@@ -857,7 +1179,7 @@
                                                 <button 
                                                     key={race.index}
                                                     onClick={() => setCharacter({...character, race})}
-                                                    className={`w-full p-3 rounded text-left transition border ${character.race?.index === race.index ? 'bg-dndRed/20 border-dndRed text-white shadow-[0_0_15px_rgba(226,40,34,0.3)]' : 'bg-stone-800 border-stone-700 text-stone-300 hover:bg-stone-700 hover:border-stone-500'}`}
+                                                    className={`w-full p-3 rounded text-left transition border ${character.race?.index === race.index ? 'bg-dndRed/20 border-dndRed text-white shadow-[0_0_15px_rgba(226,40,34,0.3)]' : 'bg-stone-800 border-stone-700 text-stone-300 hover:bg-stone-700'}`}
                                                 >
                                                     {race.name}
                                                 </button>
@@ -880,7 +1202,7 @@
                                                         updateDerivedStats(character.baseStats, character.racialBonuses, newAsi, character.equipment, character.level, cls);
                                                         setCharacter(prev => ({ ...prev, charClass: cls, subclass: null }));
                                                     }}
-                                                    className={`w-full p-3 rounded text-left transition border ${character.charClass?.index === cls.index ? 'bg-dndRed/20 border-dndRed text-white shadow-[0_0_15px_rgba(226,40,34,0.3)]' : 'bg-stone-800 border-stone-700 text-stone-300 hover:bg-stone-700 hover:border-stone-500'}`}
+                                                    className={`w-full p-3 rounded text-left transition border ${character.charClass?.index === cls.index ? 'bg-dndRed/20 border-dndRed text-white shadow-[0_0_15px_rgba(226,40,34,0.3)]' : 'bg-stone-800 border-stone-700 text-stone-300 hover:bg-stone-700'}`}
                                                 >
                                                     {cls.name}
                                                 </button>
@@ -897,7 +1219,7 @@
                                                         <button 
                                                             key={sub.index}
                                                             onClick={() => setCharacter({...character, subclass: sub})}
-                                                            className={`w-full p-3 rounded text-left transition border ${character.subclass?.index === sub.index ? 'bg-dndRed/20 border-dndRed text-white shadow-[0_0_15px_rgba(226,40,34,0.3)]' : 'bg-stone-800 border-stone-700 text-stone-300 hover:bg-stone-700 hover:border-stone-500'}`}
+                                                            className={`w-full p-3 rounded text-left transition border ${character.subclass?.index === sub.index ? 'bg-dndRed/20 border-dndRed text-white shadow-[0_0_15px_rgba(226,40,34,0.3)]' : 'bg-stone-800 border-stone-700 text-stone-300 hover:bg-stone-700'}`}
                                                         >
                                                             {sub.name}
                                                         </button>
@@ -914,13 +1236,18 @@
                             </div>
                         )}
 
-                        {/* STEP 3: Ability Scores & ASIs */}
+                        {/* STEP 3: Background (Section 2) */}
                         {step === 3 && (
+                            <BackgroundSelector character={character} setCharacter={setCharacter} />
+                        )}
+
+                        {/* STEP 4: Ability Scores & ASIs */}
+                        {step === 4 && (
                             <div className="space-y-6">
-                                <h2 className="text-2xl font-bold text-white mb-2 border-b border-stone-700 pb-2">3. Ability Scores, Racial Bonuses & ASIs</h2>
+                                <h2 className="text-2xl font-bold text-white mb-2 border-b border-stone-700 pb-2">4. Ability Scores, Racial Bonuses & ASIs</h2>
                                 
                                 <div className="flex flex-wrap items-center justify-between gap-4 bg-stone-800 p-4 rounded-lg border border-stone-700">
-                                    <p className="text-stone-300 text-sm">Roll stats (4d6 drop lowest), use Standard Array, and assign earned Ability Score Improvements (ASIs).</p>
+                                    <p className="text-stone-300 text-sm">Roll stats, use Standard Array, or assign ASIs.</p>
                                     <div className="flex gap-3">
                                         <button 
                                             onClick={() => {
@@ -934,19 +1261,12 @@
                                                     rolls.shift();
                                                     return rolls.reduce((a, b) => a + b, 0);
                                                 };
-                                                const newBase = {
-                                                    STR: roll4d6(),
-                                                    DEX: roll4d6(),
-                                                    CON: roll4d6(),
-                                                    INT: roll4d6(),
-                                                    WIS: roll4d6(),
-                                                    CHA: roll4d6()
-                                                };
+                                                const newBase = { STR: roll4d6(), DEX: roll4d6(), CON: roll4d6(), INT: roll4d6(), WIS: roll4d6(), CHA: roll4d6() };
                                                 updateDerivedStats(newBase, character.racialBonuses, character.asiBonuses, character.equipment, character.level, character.charClass);
                                             }}
-                                            className="px-4 py-2 bg-dndRed hover:bg-red-700 text-white font-bold rounded shadow transition flex items-center gap-2 text-sm"
+                                            className="px-4 py-2 bg-dndRed hover:bg-red-700 text-white font-bold rounded shadow transition text-sm"
                                         >
-                                            <i className="fa-solid fa-dice"></i> Roll 4d6
+                                            <i className="fa-solid fa-dice mr-1"></i> Roll 4d6
                                         </button>
                                         <button 
                                             onClick={() => {
@@ -958,20 +1278,10 @@
                                             }}
                                             className="px-4 py-2 bg-stone-700 hover:bg-stone-600 text-white font-bold rounded transition text-sm"
                                         >
-                                            Standard Array (15,14,13,12,10,8)
+                                            Standard Array
                                         </button>
                                     </div>
                                 </div>
-
-                                {totalAsiAllowed > 0 && (
-                                    <div className="bg-stone-800/90 border border-stone-700 p-4 rounded-lg flex justify-between items-center text-sm">
-                                        <div>
-                                            <span className="font-bold text-white">Level {character.level} {character.charClass?.name}: </span>
-                                            <span className="text-stone-300">Ability Score Improvement (ASI) Points Available: </span>
-                                            <span className={`font-bold text-lg ml-1 ${asiRemaining === 0 ? 'text-green-400' : 'text-dndRed'}`}>{asiRemaining}</span> / {totalAsiAllowed}
-                                        </div>
-                                    </div>
-                                )}
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                                     {['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map(stat => {
@@ -990,90 +1300,39 @@
                                                         <span className="text-xs text-stone-400 ml-1">({mod >= 0 ? '+' : ''}{mod})</span>
                                                     </div>
                                                 </div>
-
                                                 <div className="text-xs text-stone-400 flex justify-between bg-stone-900 p-2 rounded">
                                                     <span>Base: <input type="number" min="1" max="20" value={base} onChange={(e) => updateBaseStat(stat, e.target.value)} className="w-12 bg-stone-800 text-white text-center rounded border border-stone-700 ml-1"/></span>
                                                     <span>Racial: <strong className="text-stone-200">+{racial}</strong></span>
-                                                    <span>ASI: <strong className="text-green-400">+{asi}</strong></span>
                                                 </div>
-
-                                                {totalAsiAllowed > 0 && (
-                                                    <div className="flex justify-between items-center pt-1 border-t border-stone-700 text-xs">
-                                                        <span className="text-stone-300 font-medium">ASI Points (+):</span>
-                                                        <div className="flex items-center gap-2">
-                                                            <button 
-                                                                onClick={() => updateAsiBonus(stat, -1)}
-                                                                className="w-7 h-7 bg-stone-700 hover:bg-stone-600 text-white rounded font-bold"
-                                                            >-</button>
-                                                            <span className="w-6 text-center font-bold text-white">{asi}</span>
-                                                            <button 
-                                                                onClick={() => updateAsiBonus(stat, 1)}
-                                                                className="w-7 h-7 bg-dndRed hover:bg-red-700 text-white rounded font-bold"
-                                                            >+</button>
-                                                        </div>
-                                                    </div>
-                                                )}
                                             </div>
                                         );
                                     })}
                                 </div>
-
-                                <div className="bg-stone-800 p-6 rounded-lg border border-stone-700 mt-6">
-                                    <h3 className="text-lg font-bold text-white mb-4"><i className="fa-solid fa-shield-halved mr-2"></i>Armor & Equipment (AC Calculation)</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-stone-400 text-sm font-bold mb-2">Armor Type</label>
-                                            <select 
-                                                className="w-full p-3 rounded bg-stone-900 text-white border border-stone-700 focus:border-dndRed focus:outline-none"
-                                                value={character.equipment.armorType || 'none'}
-                                                onChange={(e) => updateEquipment('armorType', e.target.value)}
-                                            >
-                                                <option value="none">Unarmored (10 + DEX)</option>
-                                                <option value="light">Light Armor / Leather (11 + DEX)</option>
-                                                <option value="medium">Medium Armor / Scale Mail (14 + DEX, max +2)</option>
-                                                <option value="heavy">Heavy Armor / Chain Mail (16 flat)</option>
-                                                <option value="plate">Full Plate (18 flat)</option>
-                                            </select>
-                                        </div>
-                                        <div className="flex items-center pt-6">
-                                            <label className="flex items-center gap-3 text-stone-300 cursor-pointer hover:text-white transition">
-                                                <input 
-                                                    type="checkbox" 
-                                                    className="w-5 h-5 accent-dndRed"
-                                                    checked={character.equipment.shield || false}
-                                                    onChange={(e) => updateEquipment('shield', e.target.checked)}
-                                                />
-                                                <span className="font-bold">Equip Shield (+2 AC)</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div className="mt-4 text-xs text-stone-400 bg-stone-900 p-3 rounded border border-stone-700">
-                                        Current Calculated Armor Class (AC): <strong className="text-dndRed text-base ml-1">{character.armorClass}</strong>
-                                    </div>
-                                </div>
                             </div>
                         )}
 
-                        {/* STEP 4: Spells API Integration */}
-                        {step === 4 && (
+                        {/* STEP 5: Items & Equipment (Section 1) */}
+                        {step === 5 && (
+                            <InventoryManager character={character} setCharacter={setCharacter} />
+                        )}
+
+                        {/* STEP 6: Spells */}
+                        {step === 6 && (
                             <div className="space-y-6">
-                                <h2 className="text-2xl font-bold text-white mb-2 border-b border-stone-700 pb-2">4. Spellcasting & Grimoire</h2>
-                                <p className="text-stone-400 mb-6">
-                                    Search and add spells to your character's spellbook.
-                                </p>
+                                <h2 className="text-2xl font-bold text-white mb-2 border-b border-stone-700 pb-2">6. Spellcasting & Grimoire</h2>
                                 <SpellSelector character={character} setCharacter={setCharacter} />
                             </div>
                         )}
 
-                        {/* STEP 5: Final Sheet Review */}
-                        {step === 5 && (
+                        {/* STEP 7: Final Sheet Review */}
+                        {step === 7 && (
                             <div className="animation-fade-in">
                                 <CharacterSheet character={character} onEdit={() => setStep(1)} />
                             </div>
                         )}
 
                         {/* Navigation Buttons */}
-                        {step < 5 && (
+                        {step < 7 && (
                             <div className="mt-10 flex justify-between border-t border-stone-800 pt-6">
                                 <button 
                                     onClick={prevStep}
@@ -1087,7 +1346,7 @@
                                     onClick={nextStep}
                                     className="px-8 py-3 rounded font-bold bg-dndRed hover:bg-red-700 text-white shadow-[0_4px_14px_0_rgba(226,40,34,0.39)] transition duration-200"
                                 >
-                                    {step === 4 ? 'Forge Character' : 'Next Step'} <i className="fa-solid fa-arrow-right ml-2"></i>
+                                    {step === 6 ? 'Forge Character' : 'Next Step'} <i className="fa-solid fa-arrow-right ml-2"></i>
                                 </button>
                             </div>
                         )}
