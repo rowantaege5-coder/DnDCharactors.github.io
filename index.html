@@ -66,7 +66,7 @@
 
         const API_BASE = "https://www.dnd5eapi.co/api";
 
-        // Comprehensive subclass mappings to ensure all subclasses are available (beyond SRD single-subclass limit)
+        // Comprehensive subclass mappings to ensure all subclasses are available
         const COMPREHENSIVE_SUBCLASSES = {
             barbarian: [
                 { index: 'path-of-the-berserker', name: 'Path of the Berserker' },
@@ -195,7 +195,6 @@
             ]
         };
 
-        // Utility: Fetch list from API
         const fetchAPI = async (endpoint) => {
             try {
                 const response = await fetch(`${API_BASE}/${endpoint}`);
@@ -207,7 +206,6 @@
             }
         };
 
-        // Utility: Fetch specific details
         const fetchDetails = async (url) => {
             try {
                 const response = await fetch(`https://www.dnd5eapi.co${url}`);
@@ -218,7 +216,24 @@
             }
         };
 
+        // Calculate ASI count based on class and level
+        const getAsiCount = (charClass, level) => {
+            if (!charClass) return 0;
+            const cls = charClass.index;
+            let levels = [];
+            if (cls === 'fighter') {
+                levels = [4, 6, 8, 12, 14, 16, 19];
+            } else if (cls === 'rogue') {
+                levels = [4, 8, 10, 12, 16, 19];
+            } else {
+                levels = [4, 8, 12, 16, 19];
+            }
+            return levels.filter(l => level >= l).length;
+        };
+
         const CharacterSheet = ({ character, onEdit }) => {
+            const getFinalScore = (stat) => (character.baseStats[stat] || 10) + (character.racialBonuses[stat] || 0) + (character.asiBonuses[stat] || 0);
+
             return (
                 <div className="parchment p-8 rounded-lg shadow-2xl max-w-4xl w-full mx-auto font-serif">
                     <div className="border-b-4 border-red-800 pb-4 mb-6 flex justify-between items-end">
@@ -239,15 +254,24 @@
                             <div className="bg-white/50 p-4 border-2 border-gray-400 rounded-lg shadow-sm">
                                 <h3 className="text-center font-bold text-gray-800 border-b border-gray-400 pb-1 mb-3 uppercase tracking-widest text-sm">Ability Scores</h3>
                                 <div className="space-y-3">
-                                    {Object.entries(character.stats).map(([stat, val]) => (
-                                        <div key={stat} className="flex justify-between items-center bg-white p-2 rounded border border-gray-300">
-                                            <span className="font-bold text-gray-600 w-12">{stat}</span>
-                                            <span className="text-2xl font-bold text-red-900">{val}</span>
-                                            <span className="text-sm font-bold w-8 text-right text-gray-500">
-                                                {Math.floor((val - 10) / 2) >= 0 ? '+' : ''}{Math.floor((val - 10) / 2)}
-                                            </span>
-                                        </div>
-                                    ))}
+                                    {['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map(stat => {
+                                        const finalVal = getFinalScore(stat);
+                                        const mod = Math.floor((finalVal - 10) / 2);
+                                        return (
+                                            <div key={stat} className="flex justify-between items-center bg-white p-2 rounded border border-gray-300">
+                                                <span className="font-bold text-gray-600 w-12">{stat}</span>
+                                                <div className="text-center">
+                                                    <span className="text-xl font-bold text-red-900">{finalVal}</span>
+                                                    <div className="text-[10px] text-gray-500">
+                                                        (Base:{character.baseStats[stat]} + R:{character.racialBonuses[stat] || 0} + ASI:{character.asiBonuses[stat] || 0})
+                                                    </div>
+                                                </div>
+                                                <span className="text-sm font-bold w-10 text-right text-gray-700">
+                                                    {mod >= 0 ? '+' : ''}{mod}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                             
@@ -430,7 +454,9 @@
                 race: null,
                 charClass: null,
                 subclass: null,
-                stats: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
+                baseStats: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
+                racialBonuses: { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 },
+                asiBonuses: { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 },
                 armorClass: 10,
                 maxHp: 10,
                 spells: [],
@@ -456,7 +482,7 @@
                 initData();
             }, []);
 
-            // Fetch & Combine Subclasses for Class (API + Comprehensive Fallbacks)
+            // Fetch & Combine Subclasses for Class
             useEffect(() => {
                 const loadSubclasses = async () => {
                     if (!character.charClass) {
@@ -475,7 +501,31 @@
                 loadSubclasses();
             }, [character.charClass?.index]);
 
-            // Fetch Class Features / Abilities dynamically with robust array safeguards
+            // Fetch Race Bonuses when race changes
+            useEffect(() => {
+                const loadRaceBonuses = async () => {
+                    if (!character.race) return;
+                    const details = await fetchDetails(character.race.url);
+                    const newRacial = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+                    if (details && details.ability_bonuses) {
+                        details.ability_bonuses.forEach(b => {
+                            const name = b.ability_score.name.toUpperCase();
+                            let key = name;
+                            if (name === 'STRENGTH') key = 'STR';
+                            if (name === 'DEXTERITY') key = 'DEX';
+                            if (name === 'CONSTITUTION') key = 'CON';
+                            if (name === 'INTELLIGENCE') key = 'INT';
+                            if (name === 'WISDOM') key = 'WIS';
+                            if (name === 'CHARISMA') key = 'CHA';
+                            newRacial[key] = b.bonus;
+                        });
+                    }
+                    updateDerivedStats(character.baseStats, newRacial, character.asiBonuses, character.equipment, character.level, character.charClass);
+                };
+                loadRaceBonuses();
+            }, [character.race?.index]);
+
+            // Fetch Class Features dynamically
             useEffect(() => {
                 const loadFeatures = async () => {
                     if (!character.charClass) return;
@@ -504,50 +554,69 @@
                         }));
                     } catch (err) {
                         console.error("Error loading features:", err);
-                        setCharacter(prev => ({
-                            ...prev,
-                            features: [{ name: "Class Features", desc: ["Features could not be retrieved from API for this level/class combination."] }]
-                        }));
                     }
                 };
                 loadFeatures();
             }, [character.charClass?.index, character.level]);
 
-            // Handlers
-            const updateStat = (stat, value) => {
-                const newStats = { ...character.stats, [stat]: parseInt(value) || 0 };
-                const conMod = Math.floor((newStats.CON - 10) / 2);
-                const dexMod = Math.floor((newStats.DEX - 10) / 2);
-                const baseHp = character.charClass ? 8 : 8; 
-                
-                let acBonus = 0;
-                if (character.equipment.armor) acBonus += 2;
-                if (character.equipment.shield) acBonus += 1;
-                
-                setCharacter({
-                    ...character, 
-                    stats: newStats,
-                    maxHp: (baseHp + conMod) * character.level,
-                    armorClass: 10 + dexMod + acBonus
+            // Helper to compute derived stats (HP, AC, Totals)
+            const updateDerivedStats = (baseStats, racialBonuses, asiBonuses, equipment, level, charClass) => {
+                const finalStats = {};
+                ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].forEach(stat => {
+                    finalStats[stat] = (baseStats[stat] || 10) + (racialBonuses[stat] || 0) + (asiBonuses[stat] || 0);
                 });
+
+                const conMod = Math.floor((finalStats.CON - 10) / 2);
+                const dexMod = Math.floor((finalStats.DEX - 10) / 2);
+                
+                let hitDie = 8;
+                if (charClass) {
+                    const c = charClass.index;
+                    if (['wizard', 'sorcerer'].includes(c)) hitDie = 6;
+                    else if (['bard', 'cleric', 'druid', 'monk', 'rogue', 'warlock'].includes(c)) hitDie = 8;
+                    else if (['fighter', 'paladin', 'ranger', 'artificer'].includes(c)) hitDie = 10;
+                    else if (['barbarian'].includes(c)) hitDie = 12;
+                }
+                const avgHpPerLevel = Math.floor(hitDie / 2) + 1;
+                const maxHp = Math.max(level, (hitDie + conMod) + (level > 1 ? (avgHpPerLevel + conMod) * (level - 1) : 0));
+
+                let acBonus = 0;
+                if (equipment.armor) acBonus += 2;
+                if (equipment.shield) acBonus += 1;
+                const armorClass = 10 + dexMod + acBonus;
+
+                setCharacter(prev => ({
+                    ...prev,
+                    baseStats,
+                    racialBonuses,
+                    asiBonuses,
+                    maxHp,
+                    armorClass
+                }));
+            };
+
+            const updateBaseStat = (stat, value) => {
+                const newBase = { ...character.baseStats, [stat]: parseInt(value) || 0 };
+                updateDerivedStats(newBase, character.racialBonuses, character.asiBonuses, character.equipment, character.level, character.charClass);
+            };
+
+            const updateAsiBonus = (stat, delta) => {
+                const currentVal = character.asiBonuses[stat] || 0;
+                const newVal = currentVal + delta;
+                if (newVal < 0) return;
+                
+                const totalAllowed = getAsiCount(character.charClass, character.level) * 2;
+                const currentSpent = Object.entries(character.asiBonuses).reduce((acc, [s, v]) => s === stat ? acc + newVal : acc + v, 0);
+                
+                if (delta > 0 && currentSpent > totalAllowed) return; // Exceeds ASI points
+
+                const newAsi = { ...character.asiBonuses, [stat]: newVal };
+                updateDerivedStats(character.baseStats, character.racialBonuses, newAsi, character.equipment, character.level, character.charClass);
             };
 
             const toggleEquipment = (item) => {
                 const newEq = { ...character.equipment, [item]: !character.equipment[item] };
-                const conMod = Math.floor((character.stats.CON - 10) / 2);
-                const dexMod = Math.floor((character.stats.DEX - 10) / 2);
-                const baseHp = character.charClass ? 8 : 8; 
-
-                let acBonus = 0;
-                if (newEq.armor) acBonus += 2;
-                if (newEq.shield) acBonus += 1;
-
-                setCharacter({
-                    ...character,
-                    equipment: newEq,
-                    maxHp: (baseHp + conMod) * character.level,
-                    armorClass: 10 + dexMod + acBonus
-                });
+                updateDerivedStats(character.baseStats, character.racialBonuses, character.asiBonuses, newEq, character.level, character.charClass);
             };
 
             const nextStep = () => setStep(s => Math.min(s + 1, 5));
@@ -560,6 +629,10 @@
                 </div>;
             }
 
+            const totalAsiAllowed = getAsiCount(character.charClass, character.level) * 2;
+            const totalAsiSpent = Object.values(character.asiBonuses).reduce((a, b) => a + b, 0);
+            const asiRemaining = totalAsiAllowed - totalAsiSpent;
+
             return (
                 <div className="container mx-auto p-4 md:p-8">
                     {/* Header */}
@@ -567,14 +640,14 @@
                         <h1 className="text-4xl md:text-5xl font-bold text-white tracking-widest uppercase font-serif drop-shadow-md">
                             <span className="text-dndRed">D&D 5e</span> Character Forge
                         </h1>
-                        <p className="text-stone-400 mt-2">Powered by the Official D&D 5e API & Complete Subclass Expansion</p>
+                        <p className="text-stone-400 mt-2">Powered by Official D&D 5e API & Ability Score Improvements (ASI)</p>
                     </header>
 
                     {/* Progress Bar */}
                     {step < 5 && (
                         <div className="max-w-3xl mx-auto mb-8 flex justify-between relative">
                             <div className="absolute top-1/2 left-0 w-full h-1 bg-stone-800 -z-10 transform -translate-y-1/2"></div>
-                            {['Basics', 'Race & Class', 'Abilities', 'Spells'].map((label, idx) => (
+                            {['Basics', 'Race & Class', 'Abilities & ASI', 'Spells'].map((label, idx) => (
                                 <div key={idx} className={`flex flex-col items-center ${step >= idx + 1 ? 'text-dndRed' : 'text-stone-600'}`}>
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mb-2 ${step >= idx + 1 ? 'bg-dndRed text-white shadow-[0_0_10px_rgba(226,40,34,0.6)]' : 'bg-stone-800'}`}>
                                         {idx + 1}
@@ -612,13 +685,12 @@
                                         className="w-full p-4 rounded bg-stone-800 text-xl text-white border border-stone-600 focus:border-dndRed focus:outline-none focus:ring-1 focus:ring-dndRed transition"
                                         value={character.level}
                                         onChange={(e) => {
-                                            const lvl = parseInt(e.target.value);
+                                            const lvl = parseInt(e.target.value) || 1;
                                             const newLvl = lvl > 20 ? 20 : (lvl < 1 ? 1 : lvl);
-                                            const conMod = Math.floor((character.stats.CON - 10) / 2);
-                                            const baseHp = character.charClass ? 8 : 8;
-                                            setCharacter({...character, level: newLvl, maxHp: (baseHp + conMod) * newLvl});
+                                            updateDerivedStats(character.baseStats, character.racialBonuses, character.asiBonuses, character.equipment, newLvl, character.charClass);
                                         }}
                                     />
+                                    <p className="text-stone-500 text-xs mt-1">Leveling up automatically unlocks Ability Score Improvements (ASIs) at appropriate levels.</p>
                                 </div>
                             </div>
                         )}
@@ -650,7 +722,16 @@
                                             {apiData.classes.map(cls => (
                                                 <button 
                                                     key={cls.index}
-                                                    onClick={() => setCharacter({...character, charClass: cls, subclass: null})}
+                                                    onClick={() => {
+                                                        const newAsiAllowed = getAsiCount(cls, character.level) * 2;
+                                                        // Reset ASI if exceeds new limit
+                                                        let newAsi = { ...character.asiBonuses };
+                                                        if (Object.values(newAsi).reduce((a,b)=>a+b,0) > newAsiAllowed) {
+                                                            newAsi = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+                                                        }
+                                                        updateDerivedStats(character.baseStats, character.racialBonuses, newAsi, character.equipment, character.level, cls);
+                                                        setCharacter(prev => ({ ...prev, charClass: cls, subclass: null }));
+                                                    }}
                                                     className={`w-full p-3 rounded text-left transition border ${character.charClass?.index === cls.index ? 'bg-dndRed/20 border-dndRed text-white shadow-[0_0_15px_rgba(226,40,34,0.3)]' : 'bg-stone-800 border-stone-700 text-stone-300 hover:bg-stone-700 hover:border-stone-500'}`}
                                                 >
                                                     {cls.name}
@@ -685,12 +766,13 @@
                             </div>
                         )}
 
-                        {/* STEP 3: Ability Scores */}
+                        {/* STEP 3: Ability Scores & ASIs */}
                         {step === 3 && (
                             <div className="space-y-6">
-                                <h2 className="text-2xl font-bold text-white mb-6 border-b border-stone-700 pb-2">3. Ability Scores & Basic Equipment</h2>
+                                <h2 className="text-2xl font-bold text-white mb-2 border-b border-stone-700 pb-2">3. Ability Scores, Racial Bonuses & ASIs</h2>
+                                
                                 <div className="flex flex-wrap items-center justify-between gap-4 bg-stone-800 p-4 rounded-lg border border-stone-700">
-                                    <p className="text-stone-300 text-sm">Roll stats using classic 4d6 drop lowest, use the Standard Array, or customize manually.</p>
+                                    <p className="text-stone-300 text-sm">Roll stats (4d6 drop lowest), use Standard Array, and assign earned Ability Score Improvements (ASIs).</p>
                                     <div className="flex gap-3">
                                         <button 
                                             onClick={() => {
@@ -701,10 +783,10 @@
                                                         Math.floor(Math.random() * 6) + 1,
                                                         Math.floor(Math.random() * 6) + 1
                                                     ].sort((a, b) => a - b);
-                                                    rolls.shift(); // Drop lowest
+                                                    rolls.shift();
                                                     return rolls.reduce((a, b) => a + b, 0);
                                                 };
-                                                const newStats = {
+                                                const newBase = {
                                                     STR: roll4d6(),
                                                     DEX: roll4d6(),
                                                     CON: roll4d6(),
@@ -712,45 +794,19 @@
                                                     WIS: roll4d6(),
                                                     CHA: roll4d6()
                                                 };
-                                                const conMod = Math.floor((newStats.CON - 10) / 2);
-                                                const dexMod = Math.floor((newStats.DEX - 10) / 2);
-                                                const baseHp = 8;
-                                                let acBonus = 0;
-                                                if (character.equipment.armor) acBonus += 2;
-                                                if (character.equipment.shield) acBonus += 1;
-
-                                                setCharacter({
-                                                    ...character,
-                                                    stats: newStats,
-                                                    maxHp: (baseHp + conMod) * character.level,
-                                                    armorClass: 10 + dexMod + acBonus
-                                                });
+                                                updateDerivedStats(newBase, character.racialBonuses, character.asiBonuses, character.equipment, character.level, character.charClass);
                                             }}
                                             className="px-4 py-2 bg-dndRed hover:bg-red-700 text-white font-bold rounded shadow transition flex items-center gap-2 text-sm"
                                         >
-                                            <i className="fa-solid fa-dice"></i> Roll 4d6 (Drop Lowest)
+                                            <i className="fa-solid fa-dice"></i> Roll 4d6
                                         </button>
                                         <button 
                                             onClick={() => {
                                                 const standard = [15, 14, 13, 12, 10, 8];
                                                 const statKeys = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
-                                                const newStats = {};
-                                                statKeys.forEach((stat, idx) => {
-                                                    newStats[stat] = standard[idx];
-                                                });
-                                                const conMod = Math.floor((newStats.CON - 10) / 2);
-                                                const dexMod = Math.floor((newStats.DEX - 10) / 2);
-                                                const baseHp = 8;
-                                                let acBonus = 0;
-                                                if (character.equipment.armor) acBonus += 2;
-                                                if (character.equipment.shield) acBonus += 1;
-
-                                                setCharacter({
-                                                    ...character,
-                                                    stats: newStats,
-                                                    maxHp: (baseHp + conMod) * character.level,
-                                                    armorClass: 10 + dexMod + acBonus
-                                                });
+                                                const newBase = {};
+                                                statKeys.forEach((stat, idx) => { newBase[stat] = standard[idx]; });
+                                                updateDerivedStats(newBase, character.racialBonuses, character.asiBonuses, character.equipment, character.level, character.charClass);
                                             }}
                                             className="px-4 py-2 bg-stone-700 hover:bg-stone-600 text-white font-bold rounded transition text-sm"
                                         >
@@ -758,23 +814,64 @@
                                         </button>
                                     </div>
                                 </div>
-                                
-                                <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
-                                    {Object.keys(character.stats).map(stat => (
-                                        <div key={stat} className="bg-stone-800 p-4 rounded text-center border border-stone-700">
-                                            <label className="block font-bold text-stone-300 mb-2">{stat}</label>
-                                            <input 
-                                                type="number" 
-                                                min="1" max="30"
-                                                className="w-full bg-stone-900 text-white text-center text-2xl p-2 rounded border border-stone-600 focus:border-dndRed focus:outline-none"
-                                                value={character.stats[stat]}
-                                                onChange={(e) => updateStat(stat, e.target.value)}
-                                            />
-                                            <div className="mt-2 text-sm font-bold text-dndRed">
-                                                Mod: {Math.floor((character.stats[stat] - 10) / 2) >= 0 ? '+' : ''}{Math.floor((character.stats[stat] - 10) / 2)}
-                                            </div>
+
+                                {/* ASI Status bar */}
+                                {totalAsiAllowed > 0 && (
+                                    <div className="bg-stone-800/90 border border-stone-700 p-4 rounded-lg flex justify-between items-center text-sm">
+                                        <div>
+                                            <span className="font-bold text-white">Level {character.level} {character.charClass?.name}: </span>
+                                            <span className="text-stone-300">Ability Score Improvement (ASI) Points Available: </span>
+                                            <span className={`font-bold text-lg ml-1 ${asiRemaining === 0 ? 'text-green-400' : 'text-dndRed'}`}>{asiRemaining}</span> / {totalAsiAllowed}
                                         </div>
-                                    ))}
+                                        <div className="text-xs text-stone-400 italic">
+                                            (Allocate +1 or +2 to your scores using the + / - buttons below)
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                                    {['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map(stat => {
+                                        const base = character.baseStats[stat] || 10;
+                                        const racial = character.racialBonuses[stat] || 0;
+                                        const asi = character.asiBonuses[stat] || 0;
+                                        const total = base + racial + asi;
+                                        const mod = Math.floor((total - 10) / 2);
+
+                                        return (
+                                            <div key={stat} className="bg-stone-800 p-4 rounded-lg border border-stone-700 space-y-3">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="font-bold text-white text-lg">{stat}</span>
+                                                    <div className="text-right">
+                                                        <span className="text-2xl font-bold text-dndRed">{total}</span>
+                                                        <span className="text-xs text-stone-400 ml-1">({mod >= 0 ? '+' : ''}{mod})</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="text-xs text-stone-400 flex justify-between bg-stone-900 p-2 rounded">
+                                                    <span>Base: <input type="number" min="1" max="20" value={base} onChange={(e) => updateBaseStat(stat, e.target.value)} className="w-12 bg-stone-800 text-white text-center rounded border border-stone-700 ml-1"/></span>
+                                                    <span>Racial: <strong className="text-stone-200">+{racial}</strong></span>
+                                                    <span>ASI: <strong className="text-green-400">+{asi}</strong></span>
+                                                </div>
+
+                                                {totalAsiAllowed > 0 && (
+                                                    <div className="flex justify-between items-center pt-1 border-t border-stone-700 text-xs">
+                                                        <span className="text-stone-300 font-medium">ASI Points (+):</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <button 
+                                                                onClick={() => updateAsiBonus(stat, -1)}
+                                                                className="w-7 h-7 bg-stone-700 hover:bg-stone-600 text-white rounded font-bold"
+                                                            >-</button>
+                                                            <span className="w-6 text-center font-bold text-white">{asi}</span>
+                                                            <button 
+                                                                onClick={() => updateAsiBonus(stat, 1)}
+                                                                className="w-7 h-7 bg-dndRed hover:bg-red-700 text-white rounded font-bold"
+                                                            >+</button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
 
                                 <div className="bg-stone-800 p-6 rounded-lg border border-stone-700 mt-6">
