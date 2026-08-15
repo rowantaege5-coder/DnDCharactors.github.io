@@ -62,7 +62,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
 
         const API_BASE = "https://www.dnd5eapi.co/api";
 
@@ -464,6 +464,9 @@
                 equipment: { armor: false, shield: false }
             });
 
+            // Feature cache ref to prevent redundant API fetches
+            const featureCacheRef = useRef({});
+
             useEffect(() => {
                 const initData = async () => {
                     setLoading(true);
@@ -525,10 +528,13 @@
                 loadRaceBonuses();
             }, [character.race?.index]);
 
-            // Fetch Class Features dynamically
+            // Optimized Feature Loader with Caching
             useEffect(() => {
                 const loadFeatures = async () => {
-                    if (!character.charClass) return;
+                    if (!character.charClass) {
+                        setCharacter(prev => ({ ...prev, features: [] }));
+                        return;
+                    }
                     try {
                         const response = await fetch(`${API_BASE}/classes/${character.charClass.index}/levels`);
                         const levelsData = await response.json();
@@ -544,17 +550,31 @@
 
                         featureUrls = [...new Set(featureUrls)];
 
-                        const featureDetails = await Promise.all(
-                            featureUrls.map(url => fetchDetails(url))
-                        );
+                        // Only fetch feature URLs that aren't already cached
+                        const uncachedUrls = featureUrls.filter(url => !featureCacheRef.current[url]);
+
+                        if (uncachedUrls.length > 0) {
+                            const fetchedDetails = await Promise.all(
+                                uncachedUrls.map(url => fetchDetails(url))
+                            );
+                            fetchedDetails.forEach((detail, idx) => {
+                                if (detail) {
+                                    featureCacheRef.current[uncachedUrls[idx]] = detail;
+                                }
+                            });
+                        }
+
+                        // Retrieve all required features from cache
+                        const allFeatures = featureUrls
+                            .map(url => featureCacheRef.current[url])
+                            .filter(f => f !== undefined && f !== null);
                         
                         setCharacter(prev => ({
                             ...prev, 
-                            features: featureDetails.filter(f => f !== null)
+                            features: allFeatures
                         }));
                     } catch (err) {
                         console.error("Error loading features:", err);
-                        // Fallback default feature if fetch fails
                         setCharacter(prev => ({
                             ...prev,
                             features: [{ name: `${character.charClass.name} Core Training`, desc: [`Standard training and proficiency associated with level ${character.level} ${character.charClass.name}.`] }]
@@ -585,22 +605,21 @@
                 const avgHpPerLevel = Math.floor(hitDie / 2) + 1;
                 const maxHp = Math.max(level, (hitDie + conMod) + (level > 1 ? (avgHpPerLevel + conMod) * (level - 1) : 0));
 
-                // Robust Armor Class Calculation based on D&D 5e Rules
                 let armorClass = 10;
                 if (equipment.armorType === 'none') {
                     armorClass = 10 + dexMod;
                 } else if (equipment.armorType === 'light') {
-                    armorClass = 11 + dexMod; // e.g. Leather Armor
+                    armorClass = 11 + dexMod;
                 } else if (equipment.armorType === 'medium') {
-                    armorClass = 14 + Math.min(2, dexMod); // e.g. Scale Mail / Breastplate (max +2 DEX)
+                    armorClass = 14 + Math.min(2, dexMod);
                 } else if (equipment.armorType === 'heavy') {
-                    armorClass = 16; // e.g. Chain Mail (no DEX modifier)
+                    armorClass = 16;
                 } else if (equipment.armorType === 'plate') {
-                    armorClass = 18; // Full Plate (no DEX modifier)
+                    armorClass = 18;
                 }
 
                 if (equipment.shield) {
-                    armorClass += 2; // Shield gives +2 AC in 5e
+                    armorClass += 2;
                 }
 
                 setCharacter(prev => ({
@@ -629,7 +648,7 @@
                 const totalAllowed = getAsiCount(character.charClass, character.level) * 2;
                 const currentSpent = Object.entries(character.asiBonuses).reduce((acc, [s, v]) => s === stat ? acc + newVal : acc + v, 0);
                 
-                if (delta > 0 && currentSpent > totalAllowed) return; // Exceeds ASI points
+                if (delta > 0 && currentSpent > totalAllowed) return;
 
                 const newAsi = { ...character.asiBonuses, [stat]: newVal };
                 updateDerivedStats(character.baseStats, character.racialBonuses, newAsi, character.equipment, character.level, character.charClass);
@@ -745,7 +764,6 @@
                                                     key={cls.index}
                                                     onClick={() => {
                                                         const newAsiAllowed = getAsiCount(cls, character.level) * 2;
-                                                        // Reset ASI if exceeds new limit
                                                         let newAsi = { ...character.asiBonuses };
                                                         if (Object.values(newAsi).reduce((a,b)=>a+b,0) > newAsiAllowed) {
                                                             newAsi = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
@@ -836,7 +854,6 @@
                                     </div>
                                 </div>
 
-                                {/* ASI Status bar */}
                                 {totalAsiAllowed > 0 && (
                                     <div className="bg-stone-800/90 border border-stone-700 p-4 rounded-lg flex justify-between items-center text-sm">
                                         <div>
