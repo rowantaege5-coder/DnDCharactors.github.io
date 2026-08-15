@@ -689,7 +689,75 @@
                         {step === 3 && (
                             <div className="space-y-6">
                                 <h2 className="text-2xl font-bold text-white mb-6 border-b border-stone-700 pb-2">3. Ability Scores & Basic Equipment</h2>
-                                <p className="text-stone-400 mb-6">Enter your rolled stats and select basic combat gear for AC bonuses.</p>
+                                <div className="flex flex-wrap items-center justify-between gap-4 bg-stone-800 p-4 rounded-lg border border-stone-700">
+                                    <p className="text-stone-300 text-sm">Roll stats using classic 4d6 drop lowest, use the Standard Array, or customize manually.</p>
+                                    <div className="flex gap-3">
+                                        <button 
+                                            onClick={() => {
+                                                const roll4d6 = () => {
+                                                    const rolls = [
+                                                        Math.floor(Math.random() * 6) + 1,
+                                                        Math.floor(Math.random() * 6) + 1,
+                                                        Math.floor(Math.random() * 6) + 1,
+                                                        Math.floor(Math.random() * 6) + 1
+                                                    ].sort((a, b) => a - b);
+                                                    rolls.shift(); // Drop lowest
+                                                    return rolls.reduce((a, b) => a + b, 0);
+                                                };
+                                                const newStats = {
+                                                    STR: roll4d6(),
+                                                    DEX: roll4d6(),
+                                                    CON: roll4d6(),
+                                                    INT: roll4d6(),
+                                                    WIS: roll4d6(),
+                                                    CHA: roll4d6()
+                                                };
+                                                const conMod = Math.floor((newStats.CON - 10) / 2);
+                                                const dexMod = Math.floor((newStats.DEX - 10) / 2);
+                                                const baseHp = 8;
+                                                let acBonus = 0;
+                                                if (character.equipment.armor) acBonus += 2;
+                                                if (character.equipment.shield) acBonus += 1;
+
+                                                setCharacter({
+                                                    ...character,
+                                                    stats: newStats,
+                                                    maxHp: (baseHp + conMod) * character.level,
+                                                    armorClass: 10 + dexMod + acBonus
+                                                });
+                                            }}
+                                            className="px-4 py-2 bg-dndRed hover:bg-red-700 text-white font-bold rounded shadow transition flex items-center gap-2 text-sm"
+                                        >
+                                            <i className="fa-solid fa-dice"></i> Roll 4d6 (Drop Lowest)
+                                        </button>
+                                        <button 
+                                            onClick={() => {
+                                                const standard = [15, 14, 13, 12, 10, 8];
+                                                const statKeys = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+                                                const newStats = {};
+                                                statKeys.forEach((stat, idx) => {
+                                                    newStats[stat] = standard[idx];
+                                                });
+                                                const conMod = Math.floor((newStats.CON - 10) / 2);
+                                                const dexMod = Math.floor((newStats.DEX - 10) / 2);
+                                                const baseHp = 8;
+                                                let acBonus = 0;
+                                                if (character.equipment.armor) acBonus += 2;
+                                                if (character.equipment.shield) acBonus += 1;
+
+                                                setCharacter({
+                                                    ...character,
+                                                    stats: newStats,
+                                                    maxHp: (baseHp + conMod) * character.level,
+                                                    armorClass: 10 + dexMod + acBonus
+                                                });
+                                            }}
+                                            className="px-4 py-2 bg-stone-700 hover:bg-stone-600 text-white font-bold rounded transition text-sm"
+                                        >
+                                            Standard Array (15,14,13,12,10,8)
+                                        </button>
+                                    </div>
+                                </div>
                                 
                                 <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
                                     {Object.keys(character.stats).map(stat => (
