@@ -66,7 +66,6 @@
 
         const API_BASE = "https://www.dnd5eapi.co/api";
 
-        // Comprehensive fallback data for guaranteed loading resilience
         const FALLBACK_CLASSES = [
             { index: 'barbarian', name: 'Barbarian', url: '/api/classes/barbarian' },
             { index: 'bard', name: 'Bard', url: '/api/classes/bard' },
@@ -375,12 +374,12 @@
             return levels.filter(l => level >= l).length;
         };
 
-        const CharacterSheet = ({ character, onEdit }) => {
+        const CharacterSheet = ({ character, onEdit, onExport, onImport }) => {
             const getFinalScore = (stat) => (character.baseStats[stat] || 10) + (character.racialBonuses[stat] || 0) + (character.asiBonuses[stat] || 0);
 
             return (
                 <div className="parchment p-8 rounded-lg shadow-2xl max-w-4xl w-full mx-auto font-serif">
-                    <div className="border-b-4 border-red-800 pb-4 mb-6 flex justify-between items-end">
+                    <div className="border-b-4 border-red-800 pb-4 mb-6 flex flex-wrap justify-between items-end gap-4">
                         <div>
                             <h1 className="text-4xl font-bold text-red-900 uppercase tracking-wider">{character.name || "Unnamed Hero"}</h1>
                             <div className="text-lg text-gray-700 mt-2">
@@ -390,9 +389,18 @@
                                 <strong>Background:</strong> {character.background?.name || 'Acolyte'} ({character.background?.feature || 'Feature'})
                             </div>
                         </div>
-                        <button onClick={onEdit} className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition text-sm font-sans">
-                            <i className="fa-solid fa-pen mr-2"></i>Edit Character
-                        </button>
+                        <div className="flex gap-2 font-sans">
+                            <button onClick={onExport} className="px-3 py-2 bg-red-900 text-white rounded hover:bg-red-800 transition text-sm">
+                                <i className="fa-solid fa-download mr-1"></i> Export JSON
+                            </button>
+                            <label className="px-3 py-2 bg-stone-700 text-white rounded hover:bg-stone-600 transition text-sm cursor-pointer">
+                                <i className="fa-solid fa-upload mr-1"></i> Import JSON
+                                <input type="file" accept=".json" onChange={onImport} className="hidden" />
+                            </label>
+                            <button onClick={onEdit} className="px-3 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition text-sm">
+                                <i className="fa-solid fa-pen mr-1"></i> Edit
+                            </button>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -503,7 +511,7 @@
 
             return (
                 <div className="space-y-6">
-                    <h2 className="text-2xl font-bold text-white mb-2 border-b border-stone-700 pb-2">2. Background & Personality</h2>
+                    <h2 className="text-2xl font-bold text-white mb-2 border-b border-stone-700 pb-2">3. Background & Personality</h2>
                     <p className="text-stone-400 text-sm">Select your hero's background origin and define their personality traits, ideals, bonds, and flaws.</p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -615,7 +623,7 @@
 
             return (
                 <div className="space-y-6">
-                    <h2 className="text-2xl font-bold text-white mb-2 border-b border-stone-700 pb-2">1. Items & Equipment Inventory</h2>
+                    <h2 className="text-2xl font-bold text-white mb-2 border-b border-stone-700 pb-2">5. Items & Equipment Inventory</h2>
                     <p className="text-stone-400 text-sm">Browse our extensive library of over 40+ D&D items, weapons, armor, magical gear, and currency.</p>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -955,7 +963,6 @@
                 loadRaceBonuses();
             }, [character.race?.index]);
 
-            // Robust and error-free feature loader with guaranteed fallbacks
             useEffect(() => {
                 const loadFeatures = async () => {
                     if (!character.charClass) {
@@ -995,7 +1002,7 @@
                             }
                         }
                     } catch (err) {
-                        // Silent fallback - no errors logged
+                        // Silent fallback
                     }
 
                     setCharacter(prev => ({
@@ -1061,27 +1068,36 @@
                 updateDerivedStats(newBase, character.racialBonuses, character.asiBonuses, character.equipment, character.level, character.charClass);
             };
 
-            const updateAsiBonus = (stat, delta) => {
-                const currentVal = character.asiBonuses[stat] || 0;
-                const newVal = currentVal + delta;
-                if (newVal < 0) return;
-                
-                const totalAllowed = getAsiCount(character.charClass, character.level) * 2;
-                const currentSpent = Object.entries(character.asiBonuses).reduce((acc, [s, v]) => s === stat ? acc + newVal : acc + v, 0);
-                
-                if (delta > 0 && currentSpent > totalAllowed) return;
-
-                const newAsi = { ...character.asiBonuses, [stat]: newVal };
-                updateDerivedStats(character.baseStats, character.racialBonuses, newAsi, character.equipment, character.level, character.charClass);
-            };
-
-            const updateEquipment = (key, value) => {
-                const newEq = { ...character.equipment, [key]: value };
-                updateDerivedStats(character.baseStats, character.racialBonuses, character.asiBonuses, newEq, character.level, character.charClass);
-            };
-
-            const nextStep = () => setStep(s => Math.min(s + 1, 5));
+            const nextStep = () => setStep(s => Math.min(s + 1, 7));
             const prevStep = () => setStep(s => Math.max(s - 1, 1));
+
+            const exportCharacterJSON = () => {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(character, null, 2));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", `${(character.name || 'character').toLowerCase().replace(/\s+/g, '_')}_sheet.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+            };
+
+            const importCharacterJSON = (e) => {
+                const fileReader = new FileReader();
+                if (e.target.files[0]) {
+                    fileReader.readAsText(e.target.files[0], "UTF-8");
+                    fileReader.onload = (event) => {
+                        try {
+                            const parsed = JSON.parse(event.target.result);
+                            if (parsed && parsed.name) {
+                                setCharacter(parsed);
+                                setStep(7);
+                            }
+                        } catch (err) {
+                            console.error("Invalid JSON file");
+                        }
+                    };
+                }
+            };
 
             if (loading) {
                 return (
@@ -1092,21 +1108,21 @@
                 );
             }
 
-            const totalAsiAllowed = getAsiCount(character.charClass, character.level) * 2;
-            const totalAsiSpent = Object.values(character.asiBonuses).reduce((a, b) => a + b, 0);
-            const asiRemaining = totalAsiAllowed - totalAsiSpent;
-
             return (
                 <div className="container mx-auto p-4 md:p-8">
                     {/* Header */}
                     <header className="mb-8 text-center relative">
-                        <div className="absolute right-0 top-0">
+                        <div className="absolute right-0 top-0 flex gap-2">
+                            <label className="bg-stone-800 hover:bg-stone-700 text-stone-300 px-3 py-2 rounded text-xs border border-stone-700 transition flex items-center gap-2 cursor-pointer">
+                                <i className="fa-solid fa-upload"></i> Import JSON
+                                <input type="file" accept=".json" onChange={importCharacterJSON} className="hidden" />
+                            </label>
                             <button 
                                 onClick={loadAppData}
                                 title="Reload API Data"
                                 className="bg-stone-800 hover:bg-stone-700 text-stone-300 px-3 py-2 rounded text-xs border border-stone-700 transition flex items-center gap-2"
                             >
-                                <i className="fa-solid fa-rotate"></i> Refresh API
+                                <i className="fa-solid fa-rotate"></i> Refresh
                             </button>
                         </div>
                         <h1 className="text-4xl md:text-5xl font-bold text-white tracking-widest uppercase font-serif drop-shadow-md">
@@ -1120,7 +1136,7 @@
                         <div className="max-w-4xl mx-auto mb-8 flex justify-between relative">
                             <div className="absolute top-1/2 left-0 w-full h-1 bg-stone-800 -z-10 transform -translate-y-1/2"></div>
                             {['Basics', 'Race & Class', 'Background', 'Abilities', 'Items', 'Spells'].map((label, idx) => (
-                                <div key={idx} className={`flex flex-col items-center ${step >= idx + 1 ? 'text-dndRed' : 'text-stone-600'}`}>
+                                <div key={idx} className={`flex flex-col items-center cursor-pointer ${step >= idx + 1 ? 'text-dndRed' : 'text-stone-600'}`} onClick={() => setStep(idx + 1)}>
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mb-2 ${step >= idx + 1 ? 'bg-dndRed text-white shadow-[0_0_10px_rgba(226,40,34,0.6)]' : 'bg-stone-800'}`}>
                                         {idx + 1}
                                     </div>
@@ -1236,18 +1252,18 @@
                             </div>
                         )}
 
-                        {/* STEP 3: Background (Section 2) */}
+                        {/* STEP 3: Background */}
                         {step === 3 && (
                             <BackgroundSelector character={character} setCharacter={setCharacter} />
                         )}
 
-                        {/* STEP 4: Ability Scores & ASIs */}
+                        {/* STEP 4: Ability Scores */}
                         {step === 4 && (
                             <div className="space-y-6">
-                                <h2 className="text-2xl font-bold text-white mb-2 border-b border-stone-700 pb-2">4. Ability Scores, Racial Bonuses & ASIs</h2>
+                                <h2 className="text-2xl font-bold text-white mb-2 border-b border-stone-700 pb-2">4. Ability Scores & Racial Bonuses</h2>
                                 
                                 <div className="flex flex-wrap items-center justify-between gap-4 bg-stone-800 p-4 rounded-lg border border-stone-700">
-                                    <p className="text-stone-300 text-sm">Roll stats, use Standard Array, or assign ASIs.</p>
+                                    <p className="text-stone-300 text-sm">Roll stats, use Standard Array, or customize.</p>
                                     <div className="flex gap-3">
                                         <button 
                                             onClick={() => {
@@ -1311,7 +1327,7 @@
                             </div>
                         )}
 
-                        {/* STEP 5: Items & Equipment (Section 1) */}
+                        {/* STEP 5: Items & Equipment */}
                         {step === 5 && (
                             <InventoryManager character={character} setCharacter={setCharacter} />
                         )}
@@ -1327,7 +1343,12 @@
                         {/* STEP 7: Final Sheet Review */}
                         {step === 7 && (
                             <div className="animation-fade-in">
-                                <CharacterSheet character={character} onEdit={() => setStep(1)} />
+                                <CharacterSheet 
+                                    character={character} 
+                                    onEdit={() => setStep(1)} 
+                                    onExport={exportCharacterJSON} 
+                                    onImport={importCharacterJSON} 
+                                />
                             </div>
                         )}
 
